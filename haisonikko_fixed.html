@@ -1942,13 +1942,18 @@ function updatePWA() {
     var err   = document.getElementById('lic-err');
 
     input.addEventListener('input', function() {
-      var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      var raw = v.slice(4);
-      var fmt = 'HISO';
-      if (raw.length > 0) fmt += '-' + raw.slice(0, 4);
-      if (raw.length > 4) fmt += '-' + raw.slice(4, 8);
-      if (raw.length > 8) fmt += '-' + raw.slice(8, 12);
-      this.value = fmt; err.textContent = '';
+      // ユーザー入力から英数字のみを抽出（大文字化）
+      var raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      // 16文字を超える分はカット
+      if (raw.length > 16) raw = raw.slice(0, 16);
+      // 4文字ごとにハイフンを挿入してフォーマット
+      var fmt = '';
+      for (var i = 0; i < raw.length; i++) {
+        if (i > 0 && i % 4 === 0) fmt += '-';
+        fmt += raw.charAt(i);
+      }
+      this.value = fmt;
+      err.textContent = '';
     });
 
     btn.addEventListener('click', function() {
