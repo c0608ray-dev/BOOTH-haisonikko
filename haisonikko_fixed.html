@@ -1930,7 +1930,8 @@ function updatePWA() {
           '<div style="font-size:12px;color:#c47a20;letter-spacing:2px;">配送日報管理アプリ</div></div>' +
         '<div style="font-size:13px;color:#a06030;margin-bottom:8px;">シリアルキーを入力してください</div>' +
         '<input id="lic-input" type="text" maxlength="19" placeholder="HISO-XXXX-XXXX-XXXX"' +
-          ' style="width:100%;box-sizing:border-box;background:#241808;border:1px solid #5a3a10;border-radius:8px;color:#f0e6cc;padding:12px 14px;font-size:15px;letter-spacing:2px;outline:none;text-transform:uppercase;margin-bottom:8px;">' +
+          ' autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" inputmode="text"' +
+          ' style="width:100%;box-sizing:border-box;background:#241808;border:1px solid #5a3a10;border-radius:8px;color:#f0e6cc;padding:12px 14px;font-size:16px;letter-spacing:2px;outline:none;text-transform:uppercase;margin-bottom:8px;">' +
         '<div id="lic-err" style="font-size:12px;color:#ff6b6b;min-height:18px;margin-bottom:12px;"></div>' +
         '<button id="lic-btn" style="width:100%;background:linear-gradient(135deg,#e8920a,#f5b842);color:#1a1208;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:2px;">認証する</button>' +
         '<div style="font-size:11px;color:#7a5030;text-align:center;margin-top:16px;">BOOTHで購入したキーを入力してください</div>' +
@@ -1941,25 +1942,30 @@ function updatePWA() {
     var btn   = document.getElementById('lic-btn');
     var err   = document.getElementById('lic-err');
 
-    input.addEventListener('input', function() {
-      // ユーザー入力から英数字のみを抽出（大文字化）
-      var raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      // 16文字を超える分はカット
+    // ── キー文字列の整形（ハイフン区切り・大文字化） ──
+    // iOS Safariで入力中にvalueを書き換えるとIME入力が壊れるため、整形は送信時のみ行う
+    function formatKey(rawValue) {
+      var raw = (rawValue || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (raw.length > 16) raw = raw.slice(0, 16);
-      // 4文字ごとにハイフンを挿入してフォーマット
       var fmt = '';
       for (var i = 0; i < raw.length; i++) {
         if (i > 0 && i % 4 === 0) fmt += '-';
         fmt += raw.charAt(i);
       }
-      this.value = fmt;
+      return fmt;
+    }
+
+    // 入力中はエラーメッセージのクリアのみ（valueは触らない）
+    input.addEventListener('input', function() {
       err.textContent = '';
     });
 
     btn.addEventListener('click', function() {
-      var key = input.value.trim().toUpperCase();
+      // ボタン押下時に整形（iOS入力を妨害しないため）
+      var key = formatKey(input.value);
+      input.value = key; // 整形結果を表示に反映
       if (key.replace(/-/g, '').length < 16) {
-        err.textContent = '❌ キーの形式が正しくありません（HISO-XXXX-XXXX-XXXX）'; return;
+        err.textContent = '❌ キーの形式が正しくありません（HISO-XXXX-XXXX-XXXX）'; err.style.color = '#ff6b6b'; return;
       }
       err.textContent = '🔄 サーバーで確認中...'; err.style.color = '#c47a20';
       btn.disabled = input.disabled = true;
@@ -1970,7 +1976,7 @@ function updatePWA() {
           err.style.color = '#ff6b6b'; return;
         }
         if (!result.ok) {
-          var msgs = { INVALID_KEY:'❌ キーが正しくありません', RATE_LIMITED:'⏳ しばらく待ってから再試行してください', SERVER_ERROR:'❌ サーバーエラー', NO_SERVER:'❌ GAS URLが未設定です', DEVICE_LIMIT:'❌ このキーはすでに3台で使用中です。\n不要な端末の⚙設定タブ →「別のキーで再認証」で1台解除してから試してください。' };
+          var msgs = { INVALID_KEY:'❌ キーが正しくありません', RATE_LIMITED:'⏳ しばらく待ってから再試行してください', SERVER_ERROR:'❌ サーバーエラー', NO_SERVER:'❌ GAS URLが未設定です', INVALID_SECRET:'❌ サーバー設定エラー（管理者にお問い合わせください）', DEVICE_LIMIT:'❌ このキーはすでに3台で使用中です。\n不要な端末の⚙設定タブ →「別のキーで再認証」で1台解除してから試してください。' };
           err.textContent = msgs[result.code] || '❌ 認証に失敗しました'; err.style.color = '#ff6b6b'; return;
         }
         overlay.remove();
@@ -1978,7 +1984,10 @@ function updatePWA() {
       });
     });
     input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
-    input.focus();
+    // PCのみ自動フォーカス（スマホでは勝手にキーボードが開くのを防ぐ）
+    if (!('ontouchstart' in window)) {
+      input.focus();
+    }
   }
 
   // ── 起動処理 ──
