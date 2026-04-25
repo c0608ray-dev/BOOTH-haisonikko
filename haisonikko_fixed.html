@@ -1899,13 +1899,17 @@ function updatePWA() {
       '<div style="font-size:12px;display:grid;gap:5px;">' +
         '<div style="color:#a06030;">キー：<span style="color:#f0e6cc;letter-spacing:1px;font-size:11px;">' + key + '</span></div>' +
         '<div style="color:#a06030;">端末ID：<span style="color:#c8d4b8;">' + deviceId + '</span></div>' +
-        '<div style="color:#a06030;">使用台数：' + countHtml + '<span style="color:#7a5030;font-size:11px;">（このキーの合計）</span></div>' +
+        '<div style="color:#a06030;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+          '使用台数：' + countHtml +
+          '<button id="lic-refresh-btn" style="background:transparent;border:1px solid #5a3a10;border-radius:4px;color:#a06030;padding:2px 8px;font-size:10px;cursor:pointer;">🔄 更新</button>' +
+          '<span style="color:#7a5030;font-size:11px;">（このキーの合計）</span>' +
+        '</div>' +
+        '<div id="lic-refresh-status" style="font-size:11px;color:#7a5030;min-height:14px;"></div>' +
       '</div>' + warnHtml +
       '<button id="lic-reset-btn" ' +
         'style="margin-top:10px;width:100%;background:transparent;border:1px solid #8a5010;' +
         'border-radius:6px;color:#c47a20;padding:6px 12px;font-size:11px;cursor:pointer;">' +
         '🔄 別のキーで再認証</button>';
-    // ── 再認証ボタンのクリックハンドラ（インラインonclickのクォート衝突回避） ──
     // ── 再認証ボタンのクリックハンドラ ──
     // box.querySelector を使うことで、boxがまだDOMに追加されていない時でも動作する
     var resetBtn = box.querySelector('#lic-reset-btn');
@@ -1915,6 +1919,48 @@ function updatePWA() {
           try { localStorage.removeItem(LS_KEY); } catch (e) {}
           location.reload();
         }
+      });
+    }
+    // ── 更新ボタン：サーバーから最新のdeviceCountを取得 ──
+    var refreshBtn = box.querySelector('#lic-refresh-btn');
+    var statusEl = box.querySelector('#lic-refresh-status');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function() {
+        // 連打防止：直近10秒以内の連打はブロック
+        var now = Date.now();
+        if (window._lastRefreshAt && (now - window._lastRefreshAt) < 10000) {
+          if (statusEl) statusEl.textContent = '⏳ しばらく待ってから再試行してください';
+          return;
+        }
+        window._lastRefreshAt = now;
+        // ボタン無効化＋進捗表示
+        refreshBtn.disabled = true;
+        refreshBtn.style.opacity = '0.5';
+        if (statusEl) { statusEl.textContent = '🔄 サーバーに問い合わせ中...'; statusEl.style.color = '#c47a20'; }
+        // GASに問い合わせ
+        validateOnServer(key, deviceId).then(function(result) {
+          refreshBtn.disabled = false;
+          refreshBtn.style.opacity = '1';
+          if (!result) {
+            if (statusEl) { statusEl.textContent = '⚠️ サーバーに接続できません'; statusEl.style.color = '#ff6b6b'; }
+            return;
+          }
+          if (!result.ok) {
+            if (statusEl) { statusEl.textContent = '❌ 更新失敗: ' + (result.code || ''); statusEl.style.color = '#ff6b6b'; }
+            return;
+          }
+          // ローカルストレージも更新
+          var saved = loadLicense() || {};
+          saveLicense({
+            key: key, device: deviceId, token: result.token, expiry: result.expiry,
+            deviceCount: result.deviceCount, verifiedAt: Date.now()
+          });
+          // 表示を再描画（自分自身を呼び直す）
+          renderLicenseInfo(key, deviceId, result.deviceCount, box);
+          // 再描画後の statusElは新しい要素なので取り直して表示
+          var newStatus = box.querySelector('#lic-refresh-status');
+          if (newStatus) { newStatus.textContent = '✓ 最新の状態に更新しました'; newStatus.style.color = '#8fcf7a'; }
+        });
       });
     }
   }
