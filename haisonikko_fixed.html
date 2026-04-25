@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>配送日報</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1208">
+<link rel="icon" id="pwa-favicon">
+<link rel="manifest" id="pwa-manifest">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1a1208; color: #f0e6cc; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 15px; -webkit-user-select: none; user-select: none;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+button, input, textarea, select { font-family: inherit; }
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input, textarea, select { -webkit-user-select: text; user-select: text; }
+
+.header { background: #221a08; border-bottom: 3px solid #e8920a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.header-sub { font-size: 11px; color: #c47a20; letter-spacing: 3px; font-weight: bold; }
+.header-title { font-size: 18px; font-weight: bold; color: #ffd166; letter-spacing: 1px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab-btn { background: transparent; color: #c47a20; border: 1px solid #8a5010; border-radius: 6px; padding: 6px 10px; font-size: 11px; cursor: pointer; font-weight: bold; }
+.tab-btn.active { background: #e8920a; color: #1a1208; border-color: #e8920a; }
+
+.content { padding: 12px 20px 60px; max-width: 480px; margin: 0 auto; }
+.sec-lbl { font-size: 11px; color: #c47a20; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; margin-top: 20px; font-weight: bold; }
+.fld-lbl { font-size: 11px; color: #a06030; margin-bottom: 4px; }
+.inp { width: 100%; background: #241808; border: 1px solid #5a3a10; border-radius: 8px; color: #f0e6cc; padding: 10px 12px; font-size: 15px; outline: none; }
+.inp:focus { border-color: #e8920a; box-shadow: 0 0 0 2px rgba(232,146,10,0.15); }
+.sel { width: 100%; background: #241808; border: 1px solid #5a3a10; border-radius: 8px; color: #f0e6cc; padding: 10px 12px; font-size: 15px; outline: none; appearance: none; }
+.sel:focus { border-color: #e8920a; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.g2s { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.info-box { background: #2d1e06; border: 1px solid #e8920a; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.info-lbl { font-size: 12px; color: #c47a20; }
+.info-val { font-size: 16px; color: #ffd166; font-weight: bold; }
+
+.save-btn { width: 100%; background: linear-gradient(135deg, #e8920a, #f5b842); color: #1a1208; border: none; border-radius: 10px; padding: 16px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 2px; margin-top: 16px; box-shadow: 0 4px 12px rgba(232,146,10,0.3); }
+.save-btn.saved { background: #a06030; color: #f0e6cc; box-shadow: none; }
+.export-btn { width: 100%; background: transparent; color: #ffd166; border: 1px solid #8a5010; border-radius: 8px; padding: 12px; font-size: 14px; cursor: pointer; letter-spacing: 1px; margin-bottom: 8px; }
+
+.sync-box { background: #241808; border: 1px solid #5a3a10; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+.sync-title { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+.sync-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sync-btn { border-radius: 8px; padding: 12px 8px; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 1px; text-align: center; }
+.sync-export { background: transparent; color: #ffd166; border: 1px solid #8a5010; }
+.sync-import { background: transparent; color: #a0b8f0; border: 1px solid #3a5a8f; }
+.sync-note { font-size: 11px; color: #7a5030; margin-top: 8px; line-height: 1.6; }
+.sync-flash { font-size: 12px; color: #ffd166; text-align: center; margin-top: 8px; min-height: 16px; }
+
+.banner { border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.banner-warn { background: #2d1e06; border: 1px solid #e8920a; }
+.banner-over { background: #2d0808; border: 1px solid #cc3333; }
+.banner-info { background: #0f1e2a; border: 1px solid #3a5a8f; }
+.banner-txt-warn { font-size: 13px; font-weight: bold; color: #ffd166; }
+.banner-txt-over { font-size: 13px; font-weight: bold; color: #ff6b6b; }
+.banner-txt-info { font-size: 13px; font-weight: bold; color: #a0b8f0; }
+.banner-sub { font-size: 11px; color: #8a6030; margin-top: 2px; }
+
+.card { background: #221608; border: 1px solid #5a3a10; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.card.editing { border-color: #e8920a; box-shadow: 0 0 0 2px rgba(232,146,10,0.15); }
+.card-date { font-size: 15px; font-weight: bold; color: #ffd166; }
+.card-grid { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px; color: #c09060; }
+.card-hi { color: #ffd166; font-weight: bold; }
+.card-memo { margin-top: 8px; font-size: 12px; color: #8a6030; border-top: 1px solid #3a2008; padding-top: 8px; }
+.edit-btn { background: transparent; border: none; color: #c47a20; cursor: pointer; font-size: 14px; padding: 0; }
+.del-btn { background: transparent; border: none; color: #8a3030; cursor: pointer; font-size: 16px; padding: 0; }
+
+.summary { margin-top: 24px; background: #241808; border: 1px solid #5a3a10; border-radius: 10px; padding: 14px; }
+.sum-lbl { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px; }
+
+.oil-card { border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.pb-bg { background: #1a1208; border-radius: 4px; height: 8px; margin-bottom: 12px; overflow: hidden; }
+.pb-fill { height: 100%; border-radius: 4px; }
+.oil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
+.oil-hint { background: #241808; border: 1px solid #5a3a10; border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #8a6030; line-height: 1.7; margin-top: 16px; }
+.oil-save-btn { width: 100%; background: linear-gradient(135deg, #e8920a, #f5b842); color: #1a1208; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: bold; cursor: pointer; letter-spacing: 2px; margin-top: 16px; }
+
+.cancel-btn { background: transparent; color: #c09060; border: 1px solid #5a3a10; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; width: 100%; }
+.ok-btn { background: #e8920a; color: #1a1208; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; }
+.hint-sm { font-size: 11px; color: #8a6030; margin-top: 4px; }
+.empty { text-align: center; color: #7a5030; padding: 40px 0; font-size: 14px; }
+.prev-fuel { font-size: 11px; color: #8a6030; margin-top: 6px; }
+
+.sum-month-card { background: #221608; border: 1px solid #5a3a10; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.sum-month-card.current { border-color: #e8920a; box-shadow: 0 0 0 1px rgba(232,146,10,0.2); }
+.sum-month-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.sum-month-lbl { font-size: 15px; font-weight: bold; color: #ffd166; }
+.sum-month-badge { font-size: 10px; color: #e8920a; border: 1px solid #e8920a; border-radius: 4px; padding: 2px 6px; font-weight: bold; }
+.sum-kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sum-kpi { background: #1a1208; border-radius: 8px; padding: 10px 12px; }
+.sum-kpi-lbl { font-size: 10px; color: #a06030; margin-bottom: 4px; letter-spacing: 1px; }
+.sum-kpi-val { font-size: 18px; font-weight: bold; color: #f0e6cc; }
+.sum-kpi-val.hi { color: #ffd166; }
+.sum-kpi-unit { font-size: 11px; color: #a06030; margin-left: 2px; }
+.sum-empty { text-align: center; color: #7a5030; padding: 40px 0; font-size: 14px; }
+
+.veh-card { border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; border: 1px solid #5a3a10; background: #221608; }
+.veh-card.alert-warn { border-color: #e8920a; background: #2d1e06; }
+.veh-card.alert-over { border-color: #cc3333; background: #2d0808; }
+.veh-card.alert-ok   { border-color: #5a3a10; background: #221608; }
+.veh-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.veh-name { font-size: 14px; font-weight: bold; color: #f0e6cc; }
+.veh-info { font-size: 12px; color: #c09060; margin-bottom: 2px; }
+.veh-days { font-size: 20px; font-weight: bold; margin: 6px 0; }
+.veh-days.warn { color: #ffd166; }
+.veh-days.over { color: #ff6b6b; }
+.veh-days.ok   { color: #f5b842; }
+.veh-pb-bg { background: #1a1208; border-radius: 4px; height: 6px; margin: 8px 0; overflow: hidden; }
+.veh-pb-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.veh-form { background: #1a1208; border: 1px solid #5a3a10; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.veh-form-title { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+.veh-del-btn { background: transparent; border: none; color: #8a3030; cursor: pointer; font-size: 14px; padding: 0; }
+.veh-add-btn { width: 100%; background: transparent; color: #ffd166; border: 1px solid #8a5010; border-radius: 8px; padding: 12px; font-size: 13px; cursor: pointer; margin-top: 4px; font-family: inherit; }
+.veh-edit-btn { background: transparent; border: none; color: #c47a20; cursor: pointer; font-size: 13px; padding: 0; font-family: inherit; }
+
+
+.inv-track { background: #1a1208; border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+.inv-track-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.inv-track-row:last-child { margin-bottom: 0; }
+.inv-track-lbl { font-size: 11px; color: #a06030; width: 60px; flex-shrink: 0; }
+.inv-track-inp { background: #221608; border: 1px solid #5a3a10; border-radius: 4px; color: #f0e6cc; padding: 4px 8px; font-size: 12px; font-family: inherit; outline: none; flex: 1; }
+.inv-track-inp:focus { border-color: #e8920a; }
+.inv-track-check { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.inv-track-check input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: #e8920a; }
+.inv-track-check-lbl { font-size: 12px; color: #f0e6cc; }
+.inv-track-check-lbl.confirmed { color: #ffd166; font-weight: bold; }
+.inv-track-save { background: #3a2008; color: #ffd166; border: 1px solid #8a5010; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-family: inherit; }
+.inv-track-saved { font-size: 11px; color: #e8920a; margin-left: 4px; }
+
+.inv-month-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 16px; }
+.inv-month-row .inp { flex: 1; }
+.inv-gen-btn { background: #e8920a; color: #1a1208; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+.inv-settings { background: #1a1208; border: 1px solid #5a3a10; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+.inv-settings-title { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; }
+.inv-settings-save { width: 100%; background: #3a2008; color: #ffd166; border: 1px solid #8a5010; border-radius: 6px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 10px; }
+.inv-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+.inv-table th { background: #2d1e06; color: #c47a20; padding: 8px 10px; text-align: center; border: 1px solid #5a3a10; font-size: 11px; letter-spacing: 1px; font-weight: bold; }
+.inv-table td { padding: 8px 10px; border: 1px solid #3a2a10; color: #f0e6cc; text-align: center; }
+.inv-table tr:nth-child(even) td { background: #241808; }
+.inv-table .td-left { text-align: left; }
+.inv-table .td-amt { color: #ffd166; font-weight: bold; }
+.inv-table .td-total { background: #2d1e06 !important; color: #ffd166; font-weight: bold; font-size: 15px; }
+.inv-total-box { background: #2d1e06; border: 1px solid #e8920a; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin: 12px 0; }
+.inv-total-lbl { font-size: 13px; color: #c47a20; }
+.inv-total-val { font-size: 22px; color: #ffd166; font-weight: bold; }
+.inv-print-btn { width: 100%; background: #3a5a8f; color: #fff; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: bold; cursor: pointer; letter-spacing: 2px; margin-top: 8px; }
+
+.setup-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 24px 60px; max-width: 480px; margin: 0 auto; }
+.setup-logo { font-size: 48px; margin-bottom: 12px; text-align: center; }
+.setup-title { font-size: 22px; font-weight: bold; color: #ffd166; letter-spacing: 2px; text-align: center; margin-bottom: 6px; }
+.setup-subtitle { font-size: 12px; color: #c47a20; text-align: center; margin-bottom: 32px; line-height: 1.7; }
+.setup-section { width: 100%; background: #241808; border: 1px solid #5a3a10; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.setup-section-title { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 14px; font-weight: bold; }
+.setup-field { margin-bottom: 12px; }
+.setup-field:last-child { margin-bottom: 0; }
+.setup-start-btn { width: 100%; background: linear-gradient(135deg, #e8920a, #f5b842); color: #1a1208; border: none; border-radius: 10px; padding: 18px; font-size: 17px; font-weight: bold; cursor: pointer; letter-spacing: 3px; margin-top: 8px; }
+.setup-skip { width: 100%; background: transparent; color: #7a5030; border: none; padding: 12px; font-size: 12px; cursor: pointer; text-align: center; margin-top: 4px; }
+.setup-required { color: #ff6b6b; font-size: 10px; margin-left: 4px; }
+
+.settings-box { background: #241808; border: 1px solid #5a3a10; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.settings-box-title { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 14px; font-weight: bold; }
+.settings-save-btn { width: 100%; background: linear-gradient(135deg, #e8920a, #f5b842); color: #1a1208; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: bold; cursor: pointer; letter-spacing: 2px; margin-top: 4px; }
+.settings-flash { font-size: 12px; color: #ffd166; text-align: center; margin-top: 8px; min-height: 16px; }
+.settings-danger { background: #1a0808; border: 1px solid #4a2020; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+.settings-danger-title { font-size: 11px; color: #8f4040; letter-spacing: 2px; margin-bottom: 10px; }
+.settings-reset-btn { width: 100%; background: transparent; color: #8f4040; border: 1px solid #4a2020; border-radius: 8px; padding: 12px; font-size: 13px; cursor: pointer; font-family: inherit; }
+
+.client-card { background: #221608; border: 1px solid #5a3a10; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
+.client-card-body { flex: 1; }
+.client-card-name { font-size: 14px; font-weight: bold; color: #f0e6cc; margin-bottom: 4px; }
+.client-card-sub { font-size: 11px; color: #a06030; line-height: 1.7; }
+.client-card-acts { display: flex; gap: 10px; align-items: center; flex-shrink: 0; margin-left: 8px; }
+.client-edit-btn { background: transparent; border: none; color: #c47a20; cursor: pointer; font-size: 13px; padding: 0; font-family: inherit; }
+.client-del-btn { background: transparent; border: none; color: #8a3030; cursor: pointer; font-size: 16px; padding: 0; }
+.client-form { background: #1a1208; border: 1px solid #e8920a; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+.client-form-title { font-size: 11px; color: #c47a20; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; }
+.client-add-btn { width: 100%; background: transparent; color: #ffd166; border: 1px solid #8a5010; border-radius: 8px; padding: 12px; font-size: 13px; cursor: pointer; margin-top: 4px; font-family: inherit; }
+.client-card.selected { border-color: #e8920a; background: #2d1e06; }
+.client-card-hd { display: flex; justify-content: space-between; align-items: center; }
+.client-name { font-size: 14px; font-weight: bold; color: #f0e6cc; }
+.client-item-name { font-size: 11px; color: #c47a20; margin-top: 3px; }
+.client-acts { display: flex; gap: 10px; align-items: center; }
+.client-select-box { background: #2d1e06; border: 1px solid #e8920a; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.client-select-lbl { font-size: 11px; color: #c47a20; margin-bottom: 4px; }
+.client-select-name { font-size: 16px; font-weight: bold; color: #ffd166; }
+.item-sel-wrap { display: flex; gap: 6px; align-items: flex-start; }
+.item-preset-btn { background: #3a2008; color: #ffd166; border: 1px solid #8a5010; border-radius: 4px; padding: 10px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0; }
+
+.time-wrap { display: flex; flex-direction: column; gap: 4px; }
+.now-btn { background: #3a2008; color: #ffd166; border: 1px solid #8a5010; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; cursor: pointer; font-family: inherit; letter-spacing: 1px; text-align: center; }
+.now-btn:active { background: #e8920a; color: #1a1208; }
+
+.odo-wrap { display: flex; flex-direction: column; gap: 4px; }
+.odo-cam-btn { background: #221608; color: #a0b8f0; border: 1px solid #3a5a8f; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; }
+.odo-cam-btn.loading { color: #7a5030; border-color: #5a3a10; }
+</style>
+</head>
+<body>
+
+<div class="header" id="main-header" style="display:none">
+  <div>
+    <div class="header-sub" id="header-company">配送日報</div>
+    <div class="header-title">配送日報</div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="form">入力</button>
+    <button class="tab-btn" data-tab="list" id="list-btn">履歴</button>
+    <button class="tab-btn" data-tab="invoice">🧾請求書</button>
+    <button class="tab-btn" data-tab="vehicle">🚗車両</button>
+    <button class="tab-btn" data-tab="settings">⚙設定</button>
+  </div>
+</div>
+
+<div id="app"></div>
+<input type="file" id="import-file" accept=".json" style="display:none">
+
+<script>
+(function() {
+
+var SK  = 'dr-reports';
+var OK  = 'dr-oil';
+var DK  = 'dr-draft';
+var FK  = 'dr-last-fuel';
+var IK  = 'dr-invoice-settings';
+var BK  = 'dr-last-backup';
+var TK  = 'dr-inv-track';
+var VK  = 'dr-vehicle';
+var SUK = 'dr-setup-done';
+var CK  = 'dr-clients';
+
+function lsGet(k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch(e) {} }
+
+function today() { return new Date().toISOString().slice(0, 10); }
+function thisMonth() { return new Date().toISOString().slice(0, 7); }
+
+// ── 時刻差分の共通関数（日またぎ対応） ──
+// 開始〜終了の2時刻(HH:MM)から稼働分数を返す。終了が開始より早い場合は翌日として+24h補正
+function diffMin(startTime, endTime) {
+  if (!startTime || !endTime) return 0;
+  var sp = startTime.split(':'), ep = endTime.split(':');
+  if (sp.length !== 2 || ep.length !== 2) return 0;
+  var t = (parseInt(ep[0]) * 60 + parseInt(ep[1])) - (parseInt(sp[0]) * 60 + parseInt(sp[1]));
+  if (t < 0) t += 24 * 60; // 日またぎ（終了が翌日）
+  return t > 0 ? t : 0;
+}
+
+// ── レコードID生成（衝突回避） ──
+// crypto.randomUUID() を優先使用（iOS Safari 15.4+、Chrome 92+で利用可）
+// 古いブラウザ向けにはタイムスタンプ+乱数のフォールバック
+function genId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
+
+function calcDuration(s, e) {
+  var t = diffMin(s, e);
+  if (t <= 0) return '';
+  return Math.floor(t / 60) + '時間' + String(t % 60).padStart(2, '0') + '分';
+}
+function calcDistance(s, e) {
+  var a = parseFloat(s), b = parseFloat(e);
+  if (isNaN(a) || isNaN(b) || b <= a) return '';
+  return (b - a).toFixed(1);
+}
+function calcFuelEff(oFuel, fuel, lf) {
+  // 空文字・null・undefined を弾いてから parseFloat
+  var c = parseFloat(oFuel), f = parseFloat(fuel);
+  var l = (lf !== '' && lf != null) ? parseFloat(lf) : NaN;
+  if (isNaN(c) || isNaN(l) || isNaN(f) || f <= 0 || c <= l) return '';
+  return ((c - l) / f).toFixed(1);
+}
+function fmtNum(n) { return Number(n).toLocaleString(); }
+function fmtYen(n) { return '¥' + Number(Math.round(n)).toLocaleString(); }
+
+var records = lsGet(SK) || [];
+var _backupPending = null;
+var oilData = Object.assign(
+  { lastChangeOdometer: '', interval: '10000', warnAt: '3000',
+    filterLastOdometer: '', filterInterval: '15000', filterWarnAt: '2000',
+    tireLastOdometer:   '', tireInterval:   '40000', tireWarnAt:   '5000' },
+  lsGet(OK) || {}
+);
+var lastFuel = lsGet(FK) || '';
+var invSettings = lsGet(IK) || {
+  myName: '', myAddress: '', myTel: '', email: '', invoiceNo: '',
+  clientName: '', paymentNote: '当月末払い',
+  itemName: '配送業務委託費', bankInfo: '',
+  taxRate: '10', hourlyRate: '3000', breakMin: '60'
+};
+var currentView = 'form';
+var editingId = null;
+var editForm = {};
+var savedFlash = false;
+var syncFlashMsg = '';
+var settingsFlash = '';
+var invMonth = thisMonth();
+var showInvSettings = false;
+var listMonth = '';
+
+var invClientId = null;
+var showClientForm = false;
+var editClientId = null;
+var clientForm = { name: '', itemName: '配送業務委託費', paymentNote: '当月末払い', taxRate: '10', bankInfo: '' };
+
+var setupDone = lsGet(SUK) || false;
+
+(function() {
+  // 月初（1〜5日）に前月のバックアップDLをユーザーに促すためのバナー準備。
+  // ⚠ データ削除とBK永続化はここでは行わず、DLボタン押下後にユーザー確認してから実行する（307-320行参照）
+  if (!setupDone) return;
+  var lastBackup = lsGet(BK) || '';
+  var currentMonth = thisMonth();
+  var dayOfMonth = parseInt(today().slice(8, 10));
+  if (lastBackup !== currentMonth && dayOfMonth <= 5 && records.length > 0) {
+    var prevMonth = (function() {
+      var d = new Date(); d.setDate(0);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    })();
+    // バナー表示用のデータだけセット。削除処理はDLボタン側で実行
+    _backupPending = { prevMonth: prevMonth, data: buildExportData() };
+  }
+})();
+
+var form = { date: today(), startTime: '', endTime: '', odometerStart: '', odometerEnd: '', odometerFuel: '', fuel: '', fuelCost: '', memo: '', itemName: '', itemAmount: '', clientId: null };
+// ── ドラフト保存ヘルパー（タイムスタンプ付き） ──
+function saveDraft() {
+  lsSet(DK, { d: form, ts: Date.now() });
+}
+
+var draftRaw = lsGet(DK);
+var draft = null;
+if (draftRaw) {
+  if (draftRaw.ts) {
+    // 新形式: 保存から24時間以内なら復元（日付は一切変更しない）
+    if (Date.now() - draftRaw.ts < 24 * 60 * 60 * 1000) draft = draftRaw.d;
+  } else if (draftRaw.date === today()) {
+    // 旧形式との後方互換（当日付けのもののみ）
+    draft = draftRaw;
+  }
+}
+if (draft) {
+  form = draft;
+} else {
+  var lr = records.find(function(r) { return r.odometerEnd; });
+  if (lr) form.odometerStart = lr.odometerEnd;
+}
+
+function updateHeader() {
+  var hc = document.getElementById('header-company');
+  if (hc) hc.textContent = invSettings.myName || '配送日報アプリ';
+  document.title = (invSettings.myName || '配送日報') + ' 日報';
+}
+
+function el(tag, cls, txt) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+function field(label, inputEl, hint) {
+  var w = el('div');
+  w.appendChild(el('div', 'fld-lbl', label));
+  w.appendChild(inputEl);
+  if (hint) w.appendChild(el('div', 'hint-sm', hint));
+  return w;
+}
+function row2() { var g = el('div', 'g2'); for (var i = 0; i < arguments.length; i++) g.appendChild(arguments[i]); return g; }
+function row2s() { var g = el('div', 'g2s'); for (var i = 0; i < arguments.length; i++) g.appendChild(arguments[i]); return g; }
+function mkInp(type, val, ph, cb) {
+  var e = el('input', 'inp'); e.type = type; e.value = val || '';
+  if (ph) e.placeholder = ph;
+  if (cb) e.addEventListener('input', function() { cb(e.value); });
+  return e;
+}
+function mkTa(val, ph, cb) {
+  var e = el('textarea', 'inp'); e.rows = 3; e.style.resize = 'vertical'; e.value = val || '';
+  if (ph) e.placeholder = ph;
+  if (cb) e.addEventListener('input', function() { cb(e.value); });
+  return e;
+}
+function infoBox(label, value, id) {
+  var b = el('div', 'info-box'); if (id) b.id = id;
+  b.appendChild(el('span', 'info-lbl', label)); b.appendChild(el('span', 'info-val', value)); return b;
+}
+function secLbl(txt) { return el('div', 'sec-lbl', txt); }
+
+// ── アラートバナーをまとめて描画（⑥ バナー二分化を統合）──
+function buildAlertBanners(c, includeOdoBanners) {
+  var vehicles = lsGet(VK) || [];
+  var curOdo = form.odometerEnd || ((records.find(function(r) { return r.odometerEnd; }) || {}).odometerEnd) || '';
+  var cur = parseFloat(curOdo);
+
+  // バックアップ保留
+  if (_backupPending) {
+    var bb = el('div', 'banner banner-info'); bb.style.justifyContent = 'space-between';
+    var bpI = el('span'); bpI.style.fontSize = '20px'; bpI.textContent = '💾';
+    var bpT = el('div'); bpT.style.flex = '1'; bpT.style.margin = '0 10px';
+    bpT.appendChild(el('div', 'banner-txt-info', _backupPending.prevMonth + ' のバックアップをダウンロードしてください'));
+    var bpS = el('div', 'banner-sub'); bpS.textContent = '月初の自動バックアップ対象です。Dropboxなどに保存してください。';
+    bpT.appendChild(bpS);
+    var bpBtn = el('button');
+    bpBtn.style.cssText = 'background:#3a5a8f;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+    bpBtn.textContent = '📥 DL';
+    bpBtn.addEventListener('click', function() {
+      var pend = _backupPending;
+      if (!pend) return;
+      // ①バックアップJSONをダウンロード
+      downloadBlob(JSON.stringify(pend.data, null, 2), '配送日報バックアップ_' + pend.prevMonth + '.json', 'application/json;charset=utf-8');
+      // ②DL後に確認ダイアログ（iOS Safariの共有シートと被らないよう少し待つ）
+      setTimeout(function() {
+        var msg = 'バックアップファイルは保存できましたか？\n\n'
+                + '「OK」を押すと、直近3ヶ月より古いデータを削除してlocalStorageを整理します。\n\n'
+                + '※保存できていない場合は「キャンセル」を押してください。バナーは再表示されます。';
+        if (confirm(msg)) {
+          // ③ユーザー確認OK → データ削除とBK永続化を実行
+          lsSet(BK, thisMonth());
+          var keep = [0, 1, 2].map(function(n) {
+            var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - n);
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+          });
+          records = records.filter(function(r) { return r.date && keep.indexOf(r.date.slice(0, 7)) >= 0; });
+          lsSet(SK, records);
+          _backupPending = null;
+          render();
+        }
+        // キャンセル時は何もしない（_backupPendingは残る→バナーも残る→再DL可能）
+      }, 500);
+    });
+    bb.appendChild(bpI); bb.appendChild(bpT); bb.appendChild(bpBtn); c.appendChild(bb);
+  }
+
+  // 保険・車検（日付ベース） — 全タブ共通
+  vehicles.forEach(function(v) {
+    [{ label: '車検', date: v.shaken }, { label: '自賠責保険', date: v.jibaiseki }, { label: '任意保険', date: v.ninni }].forEach(function(item) {
+      if (!item.date) return;
+      var days = daysDiff(item.date); var lvl = alertLevel(days);
+      if (lvl === 'ok') return;
+      var banner = el('div', 'banner ' + (lvl === 'over' ? 'banner-over' : 'banner-warn'));
+      var icon = el('span'); icon.style.fontSize = '20px'; icon.textContent = lvl === 'over' ? '🔴' : '🟡';
+      var txt = el('div');
+      var main = el('div', lvl === 'over' ? 'banner-txt-over' : 'banner-txt-warn');
+      main.textContent = lvl === 'over'
+        ? v.name + ' ' + item.label + ' が期限切れです（' + Math.abs(days) + '日超過）'
+        : v.name + ' ' + item.label + ' の期限まで残り ' + days + '日';
+      var sub = el('div', 'banner-sub'); sub.textContent = '🚗 車両タブで確認・更新してください';
+      txt.appendChild(main); txt.appendChild(sub); banner.appendChild(icon); banner.appendChild(txt); c.appendChild(banner);
+    });
+  });
+
+  // メンテナンス（オドメーターベース） — 入力・履歴タブのみ
+  if (!includeOdoBanners || isNaN(cur)) return;
+  var warnings = [];
+  vehicles.forEach(function(v) {
+    MAINT_ITEMS.forEach(function(m) {
+      var last = parseFloat(v[m.lastKey]), interval = parseFloat(v[m.intKey] || m.defInt);
+      if (isNaN(last) || isNaN(interval)) return;
+      var rem = (last + interval) - cur;
+      var warnAt = parseFloat(v[m.warnKey] || m.defWarn);
+      if (rem > warnAt) return;
+      var lbl = vehicles.length > 1 ? v.name + ' ' + m.label : m.label;
+      warnings.push({ label: lbl, rem: rem, next: last + interval });
+    });
+  });
+  if (!warnings.length) return;
+  warnings.sort(function(a, b) { return a.rem - b.rem; });
+  var w = warnings[0]; var isOver = w.rem <= 0;
+  var b2 = el('div', 'banner ' + (isOver ? 'banner-over' : 'banner-warn'));
+  var icon2 = el('span'); icon2.style.fontSize = '20px'; icon2.textContent = isOver ? '🔴' : '🟡';
+  var txt2 = el('div');
+  var main2 = el('div', isOver ? 'banner-txt-over' : 'banner-txt-warn');
+  main2.textContent = isOver
+    ? w.label + 'を超過しています（' + fmtNum(Math.abs(Math.round(w.rem))) + ' km超過）'
+    : w.label + 'まで残り ' + fmtNum(Math.round(w.rem)) + ' km';
+  var sub2 = el('div', 'banner-sub');
+  sub2.textContent = '次回予定：' + fmtNum(Math.round(w.next)) + ' km';
+  if (warnings.length > 1) sub2.textContent += '　（他' + (warnings.length - 1) + '件の警告あり）';
+  txt2.appendChild(main2); txt2.appendChild(sub2); b2.appendChild(icon2); b2.appendChild(txt2); c.appendChild(b2);
+}
+
+function buildExportData() {
+  return {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    records: records,
+    oilData: oilData,
+    lastFuel: lastFuel,
+    invSettings: lsGet(IK) || {},
+    vehicles: lsGet(VK) || [],
+    invTrack: lsGet(TK) || {},
+    clients: lsGet(CK) || []
+  };
+}
+
+function downloadBlob(content, filename, mimeType) {
+  var blob = new Blob([content], { type: mimeType });
+  if (navigator.share && navigator.canShare) {
+    var file = new File([blob], filename, { type: mimeType });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: filename }).catch(function(){});
+      return;
+    }
+  }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportJSON() {
+  var companySlug = (invSettings.myName || '配送日報').replace(/[^\w\u3000-\u9fff]/g, '');
+  var filename = companySlug + '_日報データ_' + today() + '.json';
+  downloadBlob(JSON.stringify(buildExportData(), null, 2), filename, 'application/json;charset=utf-8');
+  setSyncFlash('📤 エクスポートしました（設定含む）');
+}
+function importJSON() { document.getElementById('import-file').click(); }
+
+document.getElementById('import-file').addEventListener('change', function(e) {
+  var file = e.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = JSON.parse(ev.target.result);
+      if (!data.records || !Array.isArray(data.records)) { setSyncFlash('❌ ファイルの形式が正しくありません'); return; }
+      var merged = data.records.slice();
+      records.forEach(function(r) { if (!merged.find(function(m) { return String(m.id) === String(r.id); })) merged.push(r); });
+      merged.sort(function(a, b) { return b.date > a.date ? 1 : b.date < a.date ? -1 : 0; });
+      records = merged; lsSet(SK, records);
+      if (data.oilData) { oilData = data.oilData; lsSet(OK, oilData); }
+      if (data.lastFuel) { lastFuel = data.lastFuel; lsSet(FK, lastFuel); }
+      if (data.invSettings) { invSettings = data.invSettings; lsSet(IK, invSettings); }
+      if (data.vehicles) lsSet(VK, data.vehicles);
+      if (data.invTrack) lsSet(TK, data.invTrack);
+      if (data.clients) lsSet(CK, data.clients);
+      lsSet(SUK, true); setupDone = true;
+      setSyncFlash('✅ インポート完了（' + records.length + '件）');
+      updateHeader();
+      render();
+    } catch(err) { setSyncFlash('❌ 読み込みエラー: ' + err.message); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+function setSyncFlash(msg) {
+  syncFlashMsg = msg;
+  var e2 = document.getElementById('sync-flash'); if (e2) e2.textContent = msg;
+  setTimeout(function() { syncFlashMsg = ''; var e3 = document.getElementById('sync-flash'); if (e3) e3.textContent = ''; }, 4000);
+}
+
+function buildSyncBox() {
+  var box = el('div', 'sync-box');
+  box.appendChild(el('div', 'sync-title', '☁ データ同期・バックアップ'));
+  var row = el('div', 'sync-btn-row');
+  var expBtn = el('button', 'sync-btn sync-export', '📤 エクスポート'); expBtn.addEventListener('click', exportJSON);
+  var impBtn = el('button', 'sync-btn sync-import', '📥 インポート'); impBtn.addEventListener('click', importJSON);
+  row.appendChild(expBtn); row.appendChild(impBtn); box.appendChild(row);
+  var flash = el('div', 'sync-flash'); flash.id = 'sync-flash'; flash.textContent = syncFlashMsg; box.appendChild(flash);
+  box.appendChild(el('div', 'sync-note', '⚠️ データはこの端末のみに保存されます。定期的にエクスポートしてDropboxなどに保存してください。\n\n① エクスポート → Dropboxフォルダに保存\n② 別の端末でDropboxからファイルを開いてインポート'));
+  return box;
+}
+
+function buildSetupScreen() {
+  var app = document.getElementById('app');
+  app.innerHTML = '';
+  document.getElementById('main-header').style.display = 'none';
+  var screen = el('div', 'setup-screen');
+  screen.appendChild(el('div', 'setup-logo', '🚚'));
+  screen.appendChild(el('div', 'setup-title', '配送日報アプリ'));
+  var sub = el('div', 'setup-subtitle');
+  sub.textContent = 'はじめに基本情報を設定してください。\nあとから⚙設定タブでいつでも変更できます。';
+  screen.appendChild(sub);
+  var sec1 = el('div', 'setup-section');
+  sec1.appendChild(el('div', 'setup-section-title', '🏢 自社情報'));
+  var nameF = el('div', 'setup-field');
+  var nameLbl = el('div', 'fld-lbl');
+  nameLbl.innerHTML = '屋号・会社名 <span class="setup-required">※必須</span>';
+  nameF.appendChild(nameLbl);
+  var nameInp = mkInp('text', invSettings.myName, '例: 山田運輸、田中配送など', function(v) { invSettings.myName = v; });
+  nameInp.id = 'setup-name';
+  nameF.appendChild(nameInp);
+  sec1.appendChild(nameF);
+  [
+    ['住所', 'myAddress', 'text', '例: 東京都渋谷区○○1-2-3'],
+    ['電話番号', 'myTel', 'tel', '例: 03-xxxx-xxxx'],
+    ['メールアドレス', 'email', 'email', '例: xxx@example.com'],
+  ].forEach(function(f) {
+    var w = el('div', 'setup-field');
+    w.appendChild(el('div', 'fld-lbl', f[0]));
+    w.appendChild(mkInp(f[2], invSettings[f[1]], f[3], function(key) { return function(v) { invSettings[key] = v; }; }(f[1])));
+    sec1.appendChild(w);
+  });
+  screen.appendChild(sec1);
+  var sec2 = el('div', 'setup-section');
+  sec2.appendChild(el('div', 'setup-section-title', '🧾 請求設定'));
+  var sec2note = el('div', 'hint-sm');
+  sec2note.style.marginBottom = '12px';
+  sec2note.textContent = '※ 委託先（請求先）は⚙設定タブの「取引先管理」で複数登録できます';
+  sec2.appendChild(sec2note);
+  [
+    ['振込先', 'bankInfo', 'text', '例: ○○銀行 △△支店 普通 0000000'],
+    ['支払条件', 'paymentNote', 'text', '例: 当月末払い'],
+  ].forEach(function(f) {
+    var w = el('div', 'setup-field');
+    w.appendChild(el('div', 'fld-lbl', f[0]));
+    w.appendChild(mkInp(f[2], invSettings[f[1]], f[3], function(key) { return function(v) { invSettings[key] = v; }; }(f[1])));
+    sec2.appendChild(w);
+  });
+  var taxW = el('div', 'setup-field');
+  taxW.appendChild(el('div', 'fld-lbl', '消費税率（%）'));
+  taxW.appendChild(mkInp('number', invSettings.taxRate || '10', '10', function(v) { invSettings.taxRate = v; }));
+  sec2.appendChild(taxW);
+  screen.appendChild(sec2);
+  var startBtn = el('button', 'setup-start-btn', '設定して使い始める →');
+  startBtn.addEventListener('click', function() {
+    var nameVal = document.getElementById('setup-name').value.trim();
+    if (!nameVal) { alert('屋号・会社名を入力してください'); return; }
+    invSettings.myName = nameVal;
+    lsSet(IK, invSettings);
+    lsSet(SUK, true);
+    setupDone = true;
+    document.getElementById('main-header').style.display = '';
+    updateHeader();
+    render();
+  });
+  screen.appendChild(startBtn);
+  var skipBtn = el('button', 'setup-skip', 'あとで設定する（⚙設定タブから変更できます）');
+  skipBtn.addEventListener('click', function() {
+    lsSet(SUK, true);
+    setupDone = true;
+    document.getElementById('main-header').style.display = '';
+    updateHeader();
+    render();
+  });
+  screen.appendChild(skipBtn);
+  app.appendChild(screen);
+}
+
+function render(resetScroll) {
+  if (!setupDone) { buildSetupScreen(); return; }
+  // ④ スクロール位置を保持（タブ切り替え時はリセット）
+  var scrollY = resetScroll ? 0 : (window.pageYOffset || document.documentElement.scrollTop);
+  document.getElementById('main-header').style.display = '';
+  updateHeader();
+  var app = document.getElementById('app'); app.innerHTML = '';
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === currentView); });
+  var lb = document.getElementById('list-btn'); if (lb) lb.textContent = '履歴' + (records.length > 0 ? '(' + records.length + ')' : '');
+  var c = el('div', 'content');
+  // ⑥ 統合バナー（入力・履歴タブはオドメーター系も表示）
+  var showOdo = currentView === 'form' || currentView === 'list';
+  buildAlertBanners(c, showOdo);
+  if (currentView === 'form') buildForm(c);
+  else if (currentView === 'list') buildList(c);
+  else if (currentView === 'invoice') buildInvoice(c);
+  else if (currentView === 'vehicle') buildVehicleTab(c);
+  else if (currentView === 'settings') buildSettingsTab(c);
+  app.appendChild(c);
+  // ④ スクロール位置を復元
+  window.scrollTo(0, scrollY);
+}
+
+function buildForm(c) {
+  if (!invSettings.myName) {
+    var nb = el('div', 'banner banner-info');
+    var icon = el('span'); icon.style.fontSize = '20px'; icon.textContent = 'ℹ️';
+    var txt = el('div');
+    txt.appendChild(el('div', 'banner-txt-info', '屋号・会社名が未設定です'));
+    var sub = el('div', 'banner-sub'); sub.textContent = '⚙設定タブから設定してください（請求書に反映されます）';
+    txt.appendChild(sub);
+    nb.appendChild(icon); nb.appendChild(txt);
+    c.appendChild(nb);
+  }
+  c.appendChild(secLbl('📅 日付'));
+  c.appendChild(mkInp('date', form.date, '', function(v) { form.date = v; saveDraft(); }));
+
+  // ── 取引先セクション ──
+  var clients = lsGet(CK) || [];
+  if (clients.length > 0) {
+    c.appendChild(secLbl('🏢 取引先'));
+    var cSel = el('select', 'sel');
+    var cBlankOpt = document.createElement('option'); cBlankOpt.value = ''; cBlankOpt.textContent = '── 未選択 ──'; cSel.appendChild(cBlankOpt);
+    clients.forEach(function(cl) {
+      var o = document.createElement('option'); o.value = String(cl.id); o.textContent = cl.name;
+      if (form.clientId === cl.id) o.selected = true;
+      cSel.appendChild(o);
+    });
+    var cInfoDiv = el('div');
+    function showClientBadge(cl) {
+      cInfoDiv.innerHTML = '';
+      if (!cl) return;
+      var badge = el('div');
+      badge.style.cssText = 'background:#1a2018;border:1px solid #3a5a30;border-radius:6px;padding:8px 12px;margin-top:6px;font-size:12px;color:#8fcf7a;display:flex;gap:12px;flex-wrap:wrap;align-items:center;';
+      var nameSpan = el('span'); nameSpan.style.fontWeight = 'bold'; nameSpan.textContent = cl.itemName || '配送業務委託費';
+      var billSpan = el('span'); billSpan.style.color = '#c47a20';
+      billSpan.textContent = cl.billingType === 'hourly'
+        ? '⏱ ¥' + fmtNum(cl.hourlyRate || 3000) + '/h（休憩' + (cl.breakMin || 60) + '分控除）'
+        : '🏷 日額固定';
+      badge.appendChild(nameSpan); badge.appendChild(billSpan);
+      cInfoDiv.appendChild(badge);
+    }
+    showClientBadge(form.clientId ? clients.find(function(cl) { return cl.id === form.clientId; }) : null);
+    cSel.addEventListener('change', function() {
+      var selId = cSel.value ? parseInt(cSel.value) : null;
+      var selCl = selId ? clients.find(function(c) { return c.id === selId; }) : null;
+      form.clientId = selCl ? selCl.id : null;
+      if (selCl) {
+        form.itemName = selCl.itemName || '配送業務委託費';
+        var ii = document.getElementById('form-item-inp'); if (ii) ii.value = form.itemName;
+        if (selCl.billingType === 'hourly') reCalc(); // 時間入力済みなら金額も更新
+      }
+      showClientBadge(selCl);
+      saveDraft();
+    });
+    c.appendChild(cSel); c.appendChild(cInfoDiv);
+  }
+
+  c.appendChild(secLbl('⏱ 作業時間'));
+  function makeTimeField(label, key, emoji) {
+    var w = el('div');
+    w.appendChild(el('div', 'fld-lbl', label));
+    var wrap = el('div', 'time-wrap');
+    var inp = mkInp('time', form[key], '', function(v) { form[key] = v; saveDraft(); reCalc(); });
+    var nowBtn = el('button', 'now-btn', emoji + ' 今すぐ');
+    nowBtn.addEventListener('click', function() {
+      var now = new Date();
+      var hh = String(now.getHours()).padStart(2, '0');
+      var mm = String(now.getMinutes()).padStart(2, '0');
+      inp.value = hh + ':' + mm;
+      form[key] = hh + ':' + mm;
+      saveDraft(); reCalc();
+    });
+    wrap.appendChild(inp); wrap.appendChild(nowBtn);
+    w.appendChild(wrap);
+    return w;
+  }
+  c.appendChild(row2(makeTimeField('開始', 'startTime', '▶'), makeTimeField('終了', 'endTime', '⏹')));
+  var d = calcDuration(form.startTime, form.endTime);
+  var durBox = infoBox('稼働時間', d, 'calc-duration'); if (!d) durBox.style.display = 'none'; c.appendChild(durBox);
+  c.appendChild(secLbl('🚚 走行距離 (km)'));
+  function makeOdoField(label, key) {
+    return field(label, mkInp('number', form[key], '例: 12345', function(v) { form[key] = v; saveDraft(); reCalc(); }));
+  }
+  c.appendChild(row2(makeOdoField('開始時', 'odometerStart'), makeOdoField('終了時', 'odometerEnd')));
+  var ds = calcDistance(form.odometerStart, form.odometerEnd);
+  var distBox = infoBox('本日の走行距離', (ds || '') + ' km', 'calc-distance'); if (!ds) distBox.style.display = 'none'; c.appendChild(distBox);
+  c.appendChild(secLbl('⛽ 燃料'));
+  c.appendChild(field('給油時走行距離 (km)', mkInp('number', form.odometerFuel, '給油しない日は空欄', function(v) { form.odometerFuel = v; saveDraft(); reCalc(); })));
+  var fr = row2(
+    field('給油量 (L)', mkInp('number', form.fuel, '0.0', function(v) { form.fuel = v; saveDraft(); reCalc(); })),
+    field('給油金額 (円)', mkInp('number', form.fuelCost, '0', function(v) { form.fuelCost = v; saveDraft(); }))
+  ); fr.style.marginTop = '10px'; c.appendChild(fr);
+  if (lastFuel) { c.appendChild(el('div', 'prev-fuel', '前回給油: ' + fmtNum(lastFuel) + ' km')); }
+  var fe = calcFuelEff(form.odometerFuel, form.fuel, lastFuel);
+  var feBox = infoBox('燃費（前回給油→今回）', (fe || '') + ' km/L', 'calc-fe'); if (!fe) feBox.style.display = 'none'; c.appendChild(feBox);
+  c.appendChild(secLbl('🏷 品名・請求金額'));
+  var itemNameSec = el('div');
+  var itemInp = mkInp('text', form.itemName || invSettings.itemName || '配送業務委託費', '例: 配送業務委託費', function(v) { form.itemName = v; saveDraft(); });
+  itemInp.id = 'form-item-inp';
+  itemNameSec.appendChild(el('div', 'fld-lbl', '品名'));
+  itemNameSec.appendChild(itemInp);
+  var amtInp = mkInp('number', form.itemAmount || '', '例: 30000', function(v) { form.itemAmount = v; saveDraft(); });
+  amtInp.id = 'form-amt-inp';
+  var autoCalcNote = el('div', 'hint-sm', '');
+  autoCalcNote.id = 'form-amt-note';
+  autoCalcNote.style.color = '#8fcf7a';
+  var amtSec = el('div');
+  amtSec.appendChild(el('div', 'fld-lbl', '請求金額（円）'));
+  amtSec.appendChild(amtInp);
+  amtSec.appendChild(autoCalcNote);
+  c.appendChild(row2(itemNameSec, amtSec));
+  c.appendChild(secLbl('📝 メモ'));
+  c.appendChild(mkTa(form.memo, '特記事項、トラブルなど', function(v) { form.memo = v; saveDraft(); }));
+  var btn = el('button', 'save-btn' + (savedFlash ? ' saved' : ''), savedFlash ? '✓ 保存しました' : '日報を保存');
+  btn.addEventListener('click', saveRecord); c.appendChild(btn);
+  var todayRec = records.find(function(r) { return r.date === today(); });
+  if (todayRec) c.appendChild(buildSummary(todayRec));
+}
+
+function reCalc() {
+  var d = calcDuration(form.startTime, form.endTime);
+  var e1 = document.getElementById('calc-duration'); if (e1) { e1.querySelector('.info-val').textContent = d; e1.style.display = d ? '' : 'none'; }
+  var ds = calcDistance(form.odometerStart, form.odometerEnd);
+  var e2 = document.getElementById('calc-distance'); if (e2) { e2.querySelector('.info-val').textContent = (ds || '') + ' km'; e2.style.display = ds ? '' : 'none'; }
+  var fe = calcFuelEff(form.odometerFuel, form.fuel, lastFuel);
+  var e3 = document.getElementById('calc-fe'); if (e3) { e3.querySelector('.info-val').textContent = (fe || '') + ' km/L'; e3.style.display = fe ? '' : 'none'; }
+  // 時間単価クライアント選択中なら開始・終了時刻から金額を自動計算
+  if (form.clientId && form.startTime && form.endTime) {
+    var rcClients = lsGet(CK) || [];
+    var rcCl = rcClients.find(function(c) { return c.id === form.clientId; });
+    if (rcCl && rcCl.billingType === 'hourly') {
+      var totalMin = diffMin(form.startTime, form.endTime);
+      var breakM = parseFloat(rcCl.breakMin) || 60;
+      var billMin = Math.max(0, totalMin - breakM);
+      var billH = billMin / 60;
+      var amt = Math.ceil(billH * (parseFloat(rcCl.hourlyRate) || 3000));
+      if (amt > 0) {
+        form.itemAmount = String(amt);
+        var ai = document.getElementById('form-amt-inp'); if (ai) ai.value = amt;
+        var an = document.getElementById('form-amt-note');
+        if (an) an.textContent = '⏱ ' + Math.floor(billH) + '時間' + String(billMin % 60).padStart(2,'0') + '分 × ¥' + fmtNum(rcCl.hourlyRate||3000) + '/h = ¥' + fmtNum(amt) + '（自動計算）';
+      }
+    }
+  }
+}
+
+function buildSummary(r) {
+  var s = el('div', 'summary'); s.appendChild(el('div', 'sum-lbl', '📋 本日の日報'));
+  var g = el('div', 'sum-grid');
+  [ r.startTime && ['開始', r.startTime, false], r.endTime && ['終了', r.endTime, false],
+    r.duration && ['稼働', r.duration, true], r.odometerStart && ['開始計', r.odometerStart + ' km', false],
+    r.odometerEnd && ['終了計', r.odometerEnd + ' km', false], r.distance && ['走行', r.distance + ' km', true],
+    r.fuel && ['給油', r.fuel + ' L', false], r.fuelEfficiency && ['燃費', r.fuelEfficiency + ' km/L', false],
+    r.fuelCost && ['燃料費', '¥' + fmtNum(r.fuelCost), false],
+  ].filter(Boolean).forEach(function(row) {
+    var cell = el('div');
+    var k = el('span'); k.style.color = '#5a7050'; k.textContent = row[0] + ' ';
+    var v = el('span'); v.textContent = row[1]; v.style.color = row[2] ? '#8fcf7a' : '#c8d4b8'; if (row[2]) v.style.fontWeight = 'bold';
+    cell.appendChild(k); cell.appendChild(v); g.appendChild(cell);
+  });
+  s.appendChild(g);
+  if (r.memo) { var m = el('div'); m.style.cssText = 'margin-top:8px;font-size:12px;color:#5a7050;border-top:1px solid #1e2d1a;padding-top:8px;'; m.textContent = r.memo; s.appendChild(m); }
+  return s;
+}
+
+function buildList(c) {
+  c.appendChild(buildSyncBox());
+  if (!records.length) { c.appendChild(el('div', 'empty', 'まだ日報がありません')); return; }
+  var months = [];
+  records.forEach(function(r) { if (!r.date) return; var ym = r.date.slice(0, 7); if (months.indexOf(ym) < 0) months.push(ym); });
+  months.sort(function(a, b) { return b > a ? 1 : -1; });
+  var filterBox = el('div'); filterBox.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:10px;';
+  filterBox.appendChild(el('span', 'fld-lbl', '月を絞り込む：'));
+  var sel = el('select', 'sel'); sel.style.flex = '1';
+  var allOpt = document.createElement('option'); allOpt.value = ''; allOpt.textContent = '全件表示（' + records.length + '件）';
+  sel.appendChild(allOpt);
+  months.forEach(function(ym) {
+    var cnt = records.filter(function(r) { return r.date && r.date.slice(0,7) === ym; }).length;
+    var opt = document.createElement('option');
+    opt.value = ym; opt.textContent = ym.replace('-','年') + '月（' + cnt + '件）';
+    if (ym === listMonth) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', function() { listMonth = sel.value; render(); });
+  filterBox.appendChild(sel);
+  c.appendChild(filterBox);
+  var filtered = listMonth ? records.filter(function(r) { return r.date && r.date.slice(0,7) === listMonth; }) : records;
+  var exb = el('button', 'export-btn', '⬇ Excelでエクスポート (' + filtered.length + '件)');
+  exb.addEventListener('click', function() { exportData(filtered); });
+  c.appendChild(exb);
+  if (!filtered.length) { c.appendChild(el('div', 'empty', 'この月のデータはありません')); return; }
+  filtered.forEach(function(r) {
+    var card = el('div', 'card' + (editingId === r.id ? ' editing' : ''));
+    card.appendChild(editingId === r.id ? buildEditCard(r) : buildViewCard(r)); c.appendChild(card);
+  });
+}
+
+function buildViewCard(r) {
+  var w = el('div');
+  var hd = el('div'); hd.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;';
+  var acts = el('div'); acts.style.cssText = 'display:flex;gap:10px;';
+  var eb = el('button', 'edit-btn', '✏️'); eb.addEventListener('click', function() { editingId = r.id; editForm = Object.assign({}, r); render(); });
+  var db = el('button', 'del-btn', '✕'); db.addEventListener('click', function() { deleteRecord(r.id); });
+  acts.appendChild(eb); acts.appendChild(db); hd.appendChild(el('div', 'card-date', r.date)); hd.appendChild(acts); w.appendChild(hd);
+  var g = el('div', 'card-grid');
+  [ r.startTime && ['開始', r.startTime, false], r.endTime && ['終了', r.endTime, false],
+    r.duration && ['稼働', r.duration, true], r.odometerStart && ['開始計', r.odometerStart + ' km', false],
+    r.odometerEnd && ['終了計', r.odometerEnd + ' km', false], r.distance && ['走行', r.distance + ' km', true],
+    r.odometerFuel && ['給油計', r.odometerFuel + ' km', false], r.fuel && ['給油', r.fuel + ' L', false],
+    r.fuelCost && ['燃料費', '¥' + fmtNum(r.fuelCost), false], r.fuelEfficiency && ['燃費', r.fuelEfficiency + ' km/L（' + (r.prevFuelOdometer ? fmtNum(r.prevFuelOdometer) + '→' + fmtNum(r.odometerFuel) + 'km' : '前回不明') + '）', true],
+  ].filter(Boolean).forEach(function(row) {
+    var sp = el('span', row[2] ? 'card-hi' : '');
+    var k = el('span'); k.style.color = '#5a7050'; k.textContent = row[0] + ' ';
+    sp.appendChild(k); sp.appendChild(document.createTextNode(row[1])); g.appendChild(sp);
+  });
+  w.appendChild(g); if (r.memo) w.appendChild(el('div', 'card-memo', r.memo)); return w;
+}
+
+function buildEditCard(r) {
+  var w = el('div');
+  var lbl = el('div'); lbl.style.cssText = 'font-size:11px;color:#6b8f5e;letter-spacing:2px;margin-bottom:12px;'; lbl.textContent = '✏️ 編集中: ' + r.date; w.appendChild(lbl);
+  function ef(key) { return editForm[key] || ''; }
+  function eInp(type, key) { return mkInp(type, ef(key), '', function(v) { editForm[key] = v; }); }
+  var dw = el('div'); dw.style.marginBottom = '10px'; dw.appendChild(el('div', 'fld-lbl', '日付')); dw.appendChild(eInp('date', 'date')); w.appendChild(dw);
+  // clientIdは表示のみ（取引先紐付けを保持）
+  if (editForm.clientId) {
+    var clients_e = lsGet(CK) || [];
+    var cl_e = clients_e.find(function(c) { return c.id === editForm.clientId; });
+    if (cl_e) {
+      var clw = el('div'); clw.style.cssText = 'margin-bottom:10px;font-size:11px;color:#6b8f5e;background:#1a2018;border-radius:6px;padding:6px 10px;';
+      clw.textContent = '🏢 取引先: ' + cl_e.name + '（変更するには日報入力タブから再保存）';
+      w.appendChild(clw);
+    }
+  }
+  var iw = el('div'); iw.style.marginBottom = '10px'; iw.appendChild(el('div', 'fld-lbl', '品名')); iw.appendChild(mkInp('text', ef('itemName') || invSettings.itemName || '配送業務委託費', '', function(v) { editForm.itemName = v; })); w.appendChild(iw);
+  var aw = el('div'); aw.style.marginBottom = '10px'; aw.appendChild(el('div', 'fld-lbl', '請求金額（円）')); aw.appendChild(mkInp('number', ef('itemAmount'), '', function(v) { editForm.itemAmount = v; })); w.appendChild(aw);
+  var g = row2(
+    field('開始時刻', eInp('time', 'startTime')), field('終了時刻', eInp('time', 'endTime')),
+    field('開始計 (km)', eInp('number', 'odometerStart')), field('終了計 (km)', eInp('number', 'odometerEnd')),
+    field('給油計 (km)', eInp('number', 'odometerFuel')), field('給油量 (L)', eInp('number', 'fuel')),
+    field('給油金額 (円)', eInp('number', 'fuelCost'))
+  ); g.style.marginBottom = '8px'; w.appendChild(g);
+  if (editForm.odometerFuel || editForm.fuel) {
+    var prevW = el('div'); prevW.style.marginBottom = '8px';
+    prevW.appendChild(el('div', 'fld-lbl', '前回給油時の走行距離 (km) ※燃費計算用'));
+    var prevInp = mkInp('number', ef('prevFuelOdometer'), '前回給油のオドメーター値', function(v) { editForm.prevFuelOdometer = v; });
+    prevW.appendChild(prevInp);
+    prevW.appendChild(el('div', 'hint-sm', '変更すると保存時に燃費が正しく再計算されます'));
+    w.appendChild(prevW);
+  }
+  var mw = el('div'); mw.style.marginBottom = '10px'; mw.appendChild(el('div', 'fld-lbl', 'メモ')); mw.appendChild(mkTa(ef('memo'), '', function(v) { editForm.memo = v; })); w.appendChild(mw);
+  w.appendChild(row2s(
+    (function() { var b = el('button', 'cancel-btn', 'キャンセル'); b.addEventListener('click', function() { editingId = null; editForm = {}; render(); }); return b; })(),
+    (function() { var b = el('button', 'ok-btn', '保存'); b.addEventListener('click', saveEdit); return b; })()
+  ));
+  return w;
+}
+
+function buildInvoice(c) {
+  var setHeader = el('div'); setHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;cursor:pointer;';
+  var setLbl = el('div', 'sec-lbl'); setLbl.style.margin = '0'; setLbl.textContent = '⚙ 請求設定';
+  var setToggle = el('span'); setToggle.style.cssText = 'font-size:11px;color:#6b8f5e;'; setToggle.textContent = showInvSettings ? '▲ 閉じる' : '▼ 開く';
+  setHeader.appendChild(setLbl); setHeader.appendChild(setToggle);
+  setHeader.addEventListener('click', function() { showInvSettings = !showInvSettings; render(); });
+  c.appendChild(setHeader);
+  if (showInvSettings) {
+    var settingsBox = el('div', 'inv-settings');
+    settingsBox.appendChild(el('div', 'inv-settings-title', '請求設定（⚙設定タブからも変更できます）'));
+    var sg = el('div'); sg.style.cssText = 'display:grid;gap:8px;';
+    [
+      ['自社名', 'myName', 'text'], ['自社住所', 'myAddress', 'text'], ['自社電話', 'myTel', 'text'],
+      ['メールアドレス', 'email', 'text'], ['登録番号（インボイス）', 'invoiceNo', 'text'], ['請求先（委託先）名', 'clientName', 'text'],
+      ['消費税率（%）', 'taxRate', 'number'], ['支払条件', 'paymentNote', 'text'],
+      ['振込先', 'bankInfo', 'text']
+    ].forEach(function(f) {
+      sg.appendChild(field(f[0], mkInp(f[2], invSettings[f[1]], '', function(key) { return function(v) { invSettings[key] = v; }; }(f[1]))));
+    });
+    settingsBox.appendChild(sg);
+    var ssBtn = el('button', 'inv-settings-save', '✓ 設定を保存');
+    ssBtn.addEventListener('click', function() { lsSet(IK, invSettings); showInvSettings = false; updateHeader(); render(); });
+    settingsBox.appendChild(ssBtn);
+    c.appendChild(settingsBox);
+  }
+  c.appendChild(secLbl('📅 請求対象月'));
+  var mRow = el('div', 'inv-month-row');
+  var mInp = el('input', 'inp'); mInp.type = 'month'; mInp.value = invMonth;
+  mInp.addEventListener('change', function() { invMonth = this.value; render(); });
+  var genBtn = el('button', 'inv-gen-btn', '集計');
+  genBtn.addEventListener('click', function() { invMonth = mInp.value; render(); });
+  mRow.appendChild(mInp); mRow.appendChild(genBtn);
+  c.appendChild(mRow);
+
+  // ── 月次サマリー（請求書タブ上部） ──
+  var summaryRecs = records.filter(function(r) { return r.date && r.date.slice(0, 7) === invMonth; });
+  if (summaryRecs.length > 0) {
+    var kpiWrap = el('div');
+    kpiWrap.style.cssText = 'background:#221608;border:1px solid #5a3a10;border-radius:10px;padding:12px 14px;margin-bottom:4px;';
+    var kpiTitle = el('div'); kpiTitle.style.cssText = 'font-size:11px;color:#c47a20;letter-spacing:2px;font-weight:bold;margin-bottom:10px;';
+    kpiTitle.textContent = '📊 ' + invMonth.replace('-', '年') + '月　サマリー';
+    kpiWrap.appendChild(kpiTitle);
+    var kpiGrid = el('div', 'sum-kpi-grid');
+    var days = summaryRecs.length;
+    var totalDist = summaryRecs.reduce(function(s, r) { return s + (parseFloat(r.distance) || 0); }, 0);
+    var totalMin = summaryRecs.reduce(function(s, r) {
+      return s + diffMin(r.startTime, r.endTime);
+    }, 0);
+    var taxRateKpi = parseFloat((lsGet(IK) || {}).taxRate) || 10;
+    var subtotalKpi = summaryRecs.reduce(function(s, r) { return s + (parseFloat(r.itemAmount) || 0); }, 0);
+    var totalKpi = subtotalKpi + Math.floor(subtotalKpi * taxRateKpi / 100);
+    function kpiCell(label, val, unit, hi) {
+      var k = el('div', 'sum-kpi'); k.appendChild(el('div', 'sum-kpi-lbl', label));
+      var vrow = el('div');
+      vrow.appendChild(el('span', 'sum-kpi-val' + (hi ? ' hi' : ''), val));
+      vrow.appendChild(el('span', 'sum-kpi-unit', unit));
+      k.appendChild(vrow); return k;
+    }
+    kpiGrid.appendChild(kpiCell('稼働日数', days, '日', false));
+    kpiGrid.appendChild(kpiCell('総走行距離', totalDist.toFixed(0), ' km', false));
+    kpiGrid.appendChild(kpiCell('総稼働時間', Math.floor(totalMin/60) + 'h' + String(totalMin%60).padStart(2,'0') + 'm', '', false));
+    kpiGrid.appendChild(kpiCell('請求額（税込）', fmtNum(totalKpi), ' 円', true));
+    kpiWrap.appendChild(kpiGrid);
+
+    // ── 送付日・入金確認トラッキング ──
+    var trackData = lsGet(TK) || {}; var td = trackData[invMonth] || { sentDate: '', confirmed: false };
+    var track = el('div', 'inv-track');
+    var sentRow = el('div', 'inv-track-row'); sentRow.appendChild(el('span', 'inv-track-lbl', '📤 送付日'));
+    var sentInp = el('input', 'inv-track-inp'); sentInp.type = 'date'; sentInp.value = td.sentDate || '';
+    sentRow.appendChild(sentInp); track.appendChild(sentRow);
+    var confRow = el('div', 'inv-track-row'); confRow.appendChild(el('span', 'inv-track-lbl', '💰 入金'));
+    var chkLabel = el('label', 'inv-track-check'); var chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.checked = td.confirmed || false;
+    var chkLbl = el('span', 'inv-track-check-lbl' + (td.confirmed ? ' confirmed' : ''), td.confirmed ? '✅ 入金確認済み' : '未確認');
+    chkLabel.appendChild(chk); chkLabel.appendChild(chkLbl);
+    chk.addEventListener('change', function() {
+      chkLbl.textContent = chk.checked ? '✅ 入金確認済み' : '未確認';
+      chkLbl.className = 'inv-track-check-lbl' + (chk.checked ? ' confirmed' : '');
+    });
+    confRow.appendChild(chkLabel); track.appendChild(confRow);
+    var saveRow = el('div', 'inv-track-row'); saveRow.style.justifyContent = 'flex-end';
+    var tSaveBtn = el('button', 'inv-track-save', '保存'); var tSavedEl = el('span', 'inv-track-saved', '');
+    tSaveBtn.addEventListener('click', function() {
+      var all = lsGet(TK) || {}; all[invMonth] = { sentDate: sentInp.value, confirmed: chk.checked }; lsSet(TK, all);
+      tSavedEl.textContent = '✓ 保存しました'; setTimeout(function() { tSavedEl.textContent = ''; }, 2000);
+    });
+    saveRow.appendChild(tSavedEl); saveRow.appendChild(tSaveBtn); track.appendChild(saveRow);
+    kpiWrap.appendChild(track);
+    c.appendChild(kpiWrap);
+  }
+
+  var clients = lsGet(CK) || [];
+  var activeClient = invClientId && invClientId !== 'all'
+    ? (clients.find(function(cl) { return cl.id === invClientId; }) || null)
+    : null;
+  c.appendChild(secLbl('🏢 取引先（委託先）'));
+  if (clients.length === 0) {
+    var noClientBox = el('div', 'hint-sm');
+    noClientBox.style.cssText = 'margin-bottom:12px;color:#6b8f5e;';
+    noClientBox.textContent = '⚙設定タブの「取引先管理」から委託先を登録すると、ここで選択できるようになります';
+    c.appendChild(noClientBox);
+  } else {
+    var clientSelBox = el('div'); clientSelBox.style.marginBottom = '14px';
+    var clientSel = el('select', 'sel');
+    var noOpt = document.createElement('option'); noOpt.value = ''; noOpt.textContent = '── 取引先を選択 ──'; clientSel.appendChild(noOpt);
+    var allOpt2 = document.createElement('option'); allOpt2.value = 'all'; allOpt2.textContent = '📊 全取引先まとめ';
+    if (invClientId === 'all') allOpt2.selected = true;
+    clientSel.appendChild(allOpt2);
+    clients.forEach(function(cl) {
+      var o = document.createElement('option'); o.value = cl.id; o.textContent = cl.name;
+      if (cl.id === invClientId) o.selected = true;
+      clientSel.appendChild(o);
+    });
+    clientSel.addEventListener('change', function() {
+      if (clientSel.value === 'all') { invClientId = 'all'; }
+      else { invClientId = clientSel.value ? parseInt(clientSel.value) : null; }
+      render();
+    });
+    clientSelBox.appendChild(clientSel);
+    if (activeClient) {
+      var clientInfo = el('div'); clientInfo.style.cssText = 'margin-top:6px;font-size:11px;color:#6b8f5e;';
+      var billingDesc = activeClient.billingType === 'hourly'
+        ? '時間単価: ¥' + (activeClient.hourlyRate||3000) + '/h　休憩: ' + (activeClient.breakMin||60) + '分'
+        : '日額固定';
+      clientInfo.textContent = '品名: ' + (activeClient.itemName || '配送業務委託費') + '　請求: ' + billingDesc + '　税率: ' + (activeClient.taxRate || '10') + '%　' + (activeClient.paymentNote || '');
+      clientSelBox.appendChild(clientInfo);
+    }
+    c.appendChild(clientSelBox);
+  }
+  if (invClientId === 'all') {
+    buildAllClientsSummary(c, clients);
+    return;
+  }
+  var allMonthRecs = records.filter(function(r) { return r.date && r.date.slice(0, 7) === invMonth; });
+  allMonthRecs.sort(function(a, b) { return a.date < b.date ? -1 : 1; });
+  var monthRecs;
+  if (activeClient) {
+    monthRecs = allMonthRecs.filter(function(r) { return r.clientId === activeClient.id; });
+    if (!monthRecs.length) {
+      var defName = activeClient.itemName || '配送業務委託費';
+      monthRecs = allMonthRecs.filter(function(r) { return (r.itemName || '') === defName; });
+    }
+  } else {
+    monthRecs = allMonthRecs;
+  }
+  if (!monthRecs.length) {
+    var emptyMsg = activeClient
+      ? activeClient.name + ' の ' + invMonth + ' のデータがありません'
+      : invMonth + ' の日報データがありません';
+    c.appendChild(el('div', 'empty', emptyMsg));
+    return;
+  }
+  var effectiveClient = activeClient || invSettings;
+  var taxRate = parseFloat(effectiveClient.taxRate) || 10;
+  var defaultItemName = (activeClient ? activeClient.itemName : invSettings.itemName) || '配送業務委託費';
+  c.appendChild(secLbl('📋 稼働明細' + (activeClient ? '　' + activeClient.name : '')));
+  c.appendChild(buildInvoiceTable(monthRecs, activeClient, defaultItemName));
+  var subtotal2 = calcSubtotal(monthRecs, activeClient);
+  var tax2 = Math.floor(subtotal2 * taxRate / 100);
+  var total2 = subtotal2 + tax2;
+  var isHourly2 = activeClient && activeClient.billingType === 'hourly';
+  var tbox = el('div', 'inv-total-box');
+  var tlbl = el('div');
+  if (isHourly2) {
+    tlbl.appendChild(el('div', 'inv-total-lbl', '単価: ¥' + fmtNum(activeClient.hourlyRate||3000) + '/h　休憩控除: ' + (activeClient.breakMin||60) + '分'));
+  }
+  tlbl.appendChild(el('div', 'inv-total-lbl', '小計: ' + fmtYen(subtotal2)));
+  tlbl.appendChild(el('div', 'inv-total-lbl', '消費税（' + taxRate + '%）: ' + fmtYen(tax2)));
+  tbox.appendChild(tlbl);
+  var tval = el('div');
+  tval.appendChild(el('div', 'inv-total-lbl', '請求合計'));
+  tval.appendChild(el('div', 'inv-total-val', fmtYen(total2)));
+  tbox.appendChild(tval); c.appendChild(tbox);
+  var printBtn = el('button', 'inv-print-btn', '🖨 請求書を印刷・PDF出力');
+  printBtn.addEventListener('click', function() { generatePrintInvoice(monthRecs, subtotal2, tax2, total2, activeClient); });
+  c.appendChild(printBtn);
+  var allFuelRecs = records.filter(function(r) { return r.fuel && parseFloat(r.fuel) > 0; });
+  if (allFuelRecs.length > 0) {
+    var feb = el('button', 'export-btn', '⛽ 燃料費を経費台帳形式でエクスポート (' + allFuelRecs.length + '件)');
+    feb.style.color = '#f0c060'; feb.style.borderColor = '#8f6f1f'; feb.style.marginTop = '8px';
+    feb.addEventListener('click', exportFuelToLedger);
+    c.appendChild(feb);
+  }
+  var note = el('div', 'hint-sm');
+  note.style.marginTop = '12px';
+  note.textContent = '※ 各日の請求金額は日報入力画面の「請求金額」欄で設定できます';
+  c.appendChild(note);
+}
+
+function calcSubtotal(recs, cl) {
+  var isH = cl && cl.billingType === 'hourly';
+  var hr  = isH ? (parseFloat(cl.hourlyRate) || 3000) : 0;
+  var bm  = isH ? (parseFloat(cl.breakMin)   || 60)   : 0;
+  return recs.reduce(function(sum, r) {
+    if (isH && !parseFloat(r.itemAmount)) {
+      var tm = diffMin(r.startTime, r.endTime);
+      return sum + Math.ceil((Math.max(0, tm - bm) / 60) * hr);
+    }
+    return sum + (parseFloat(r.itemAmount) || 0);
+  }, 0);
+}
+
+function buildInvoiceTable(recs, cl, defaultItemName) {
+  var isH = cl && cl.billingType === 'hourly';
+  var hr  = isH ? (parseFloat(cl.hourlyRate) || 3000) : 0;
+  var bm  = isH ? (parseFloat(cl.breakMin)   || 60)   : 0;
+  var tbl = el('table', 'inv-table');
+  var thead = el('thead'); var hrow = el('tr');
+  ['品名','日付','開始','終了','稼働','金額'].forEach(function(h) { hrow.appendChild(el('th','',h)); });
+  thead.appendChild(hrow); tbl.appendChild(thead);
+  var tbody = el('tbody');
+  var subtotal = 0;
+  recs.forEach(function(r) {
+    var amt;
+    if (isH && !parseFloat(r.itemAmount)) {
+      var tm = diffMin(r.startTime, r.endTime);
+      var bmin = Math.max(0, tm - bm);
+      amt = Math.ceil((bmin / 60) * hr);
+    } else { amt = parseFloat(r.itemAmount) || 0; }
+    subtotal += amt;
+    var dDisp = r.duration || '-';
+    if (isH && amt) {
+      var tm2 = diffMin(r.startTime, r.endTime);
+      var bm2 = Math.max(0, tm2 - bm);
+      dDisp = (r.duration || '-') + '（請求' + Math.floor(bm2 / 60) + 'h' + String(bm2 % 60).padStart(2, '0') + 'm）';
+    }
+    var tr = el('tr');
+    [r.itemName || defaultItemName, r.date, r.startTime || '-', r.endTime || '-', dDisp, fmtYen(amt)].forEach(function(v, i) {
+      tr.appendChild(el('td', i === 5 ? 'td-amt' : (i <= 1 ? 'td-left' : ''), v));
+    });
+    tbody.appendChild(tr);
+  });
+  var tr2=el('tr');
+  var tc=el('td','td-total'); tc.colSpan=4; tc.textContent='小計'; tr2.appendChild(tc);
+  tr2.appendChild(el('td','td-total',recs.length+'日'));
+  tr2.appendChild(el('td','td-total td-amt',fmtYen(subtotal)));
+  tbody.appendChild(tr2); tbl.appendChild(tbody);
+  return tbl;
+}
+
+function buildAllClientsSummary(c, clients) {
+  var allMonthRecs = records.filter(function(r) { return r.date && r.date.slice(0, 7) === invMonth; });
+  allMonthRecs.sort(function(a, b) { return a.date < b.date ? -1 : 1; });
+  if (!allMonthRecs.length) { c.appendChild(el('div', 'empty', invMonth + ' の日報データがありません')); return; }
+  var grandTotal = 0;
+  clients.forEach(function(cl) {
+    var clRecs = allMonthRecs.filter(function(r) { return r.clientId === cl.id; });
+    if (!clRecs.length) {
+      var defN = cl.itemName || '配送業務委託費';
+      clRecs = allMonthRecs.filter(function(r) { return !r.clientId && (r.itemName||'') === defN; });
+    }
+    if (!clRecs.length) return;
+    var taxRate = parseFloat(cl.taxRate) || 10;
+    var subtotal = calcSubtotal(clRecs, cl);
+    var tax = Math.floor(subtotal * taxRate / 100);
+    var total = subtotal + tax;
+    grandTotal += total;
+    var hd = el('div'); hd.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-top:20px;margin-bottom:6px;';
+    var hdName = el('div', 'sec-lbl'); hdName.style.margin = '0'; hdName.textContent = '🏢 ' + cl.name;
+    var hdAmt = el('div'); hdAmt.style.cssText = 'font-size:14px;font-weight:bold;color:#8fcf7a;';
+    hdAmt.textContent = fmtYen(total) + '（税込）';
+    hd.appendChild(hdName); hd.appendChild(hdAmt);
+    c.appendChild(hd);
+    var defName2 = cl.itemName || '配送業務委託費';
+    c.appendChild(buildInvoiceTable(clRecs, cl, defName2));
+    var sbox = el('div'); sbox.style.cssText = 'background:#141c12;border:1px solid #2e4028;border-radius:6px;padding:8px 12px;margin-bottom:4px;display:flex;justify-content:space-between;font-size:12px;color:#6b8f5e;';
+    var isH = cl.billingType === 'hourly';
+    var sboxTxt = '小計 ' + fmtYen(subtotal) + '　消費税（' + taxRate + '%）' + fmtYen(tax);
+    if (isH) sboxTxt = '¥' + fmtNum(cl.hourlyRate||3000) + '/h　' + sboxTxt;
+    sbox.appendChild(el('span','',sboxTxt));
+    var printBtn2 = el('button', 'inv-print-btn');
+    printBtn2.style.cssText = 'font-size:11px;padding:4px 10px;margin:0;width:auto;';
+    printBtn2.textContent = '🖨 印刷';
+    printBtn2.addEventListener('click', function() { generatePrintInvoice(clRecs, subtotal, tax, total, cl); });
+    sbox.appendChild(printBtn2);
+    c.appendChild(sbox);
+  });
+  var unassigned = allMonthRecs.filter(function(r) {
+    if (r.clientId) return false;
+    var matchedByName = clients.some(function(cl) { return (cl.itemName||'配送業務委託費') === (r.itemName||''); });
+    return !matchedByName;
+  });
+  if (unassigned.length) {
+    var uhd = el('div', 'sec-lbl'); uhd.style.marginTop = '20px'; uhd.textContent = '📋 取引先未設定';
+    c.appendChild(uhd);
+    c.appendChild(buildInvoiceTable(unassigned, null, '配送業務委託費'));
+    grandTotal += calcSubtotal(unassigned, null);
+  }
+  var gtBox = el('div', 'inv-total-box'); gtBox.style.marginTop = '16px';
+  var gtL = el('div'); gtL.appendChild(el('div','inv-total-lbl', invMonth.replace('-','年') + '月　全取引先合計（税込）'));
+  var gtV = el('div'); gtV.appendChild(el('div','inv-total-val', fmtYen(grandTotal)));
+  gtBox.appendChild(gtL); gtBox.appendChild(gtV);
+  c.appendChild(gtBox);
+  var note2 = el('div', 'hint-sm'); note2.style.marginTop = '10px';
+  note2.textContent = '※ 各取引先の行の「🖨 印刷」ボタンで個別に請求書を出力できます';
+  c.appendChild(note2);
+}
+
+function generatePrintInvoice(monthRecs, subtotal, tax, total, activeClient) {
+  var effectiveClient = activeClient || invSettings;
+  var taxRate = parseFloat(effectiveClient.taxRate) || 10;
+  var issueDate = today();
+  var ym = invMonth.replace('-', '年') + '月';
+  var myName = invSettings.myName || '（自社名未設定）';
+  var clientName = activeClient ? activeClient.name : (invSettings.clientName || '委託先');
+  var paymentNote = (activeClient ? activeClient.paymentNote : invSettings.paymentNote) || '当月末払い';
+  var bankInfo = (activeClient ? activeClient.bankInfo : invSettings.bankInfo) || invSettings.bankInfo || '';
+  var defaultItemName = (activeClient ? activeClient.itemName : invSettings.itemName) || '配送業務委託費';
+  var body = '';
+  body += '<div class="pi-title">請　求　書</div>';
+  body += '<div class="pi-meta">';
+  body += '<div><div class="pi-sub">発行日：' + issueDate + '</div><div class="pi-sub">対象月：' + ym + '</div></div>';
+  body += '<div class="pi-from">' + myName;
+  if (invSettings.myAddress) body += '<br>' + invSettings.myAddress;
+  if (invSettings.myTel) body += '<br>TEL: ' + invSettings.myTel;
+  if (invSettings.email) body += '<br>Mail: ' + invSettings.email;
+  if (invSettings.invoiceNo) body += '<br>登録番号: ' + invSettings.invoiceNo;
+  body += '</div></div>';
+  body += '<div class="pi-to">' + clientName + ' 御中</div>';
+  body += '<div class="pi-total-box"><div class="pi-total-lbl">ご請求金額（税込）</div><div class="pi-total-val">' + fmtYen(total) + '</div></div>';
+  body += '<table class="pi-table"><thead><tr>';
+  ['品名','日付','開始','終了','稼働時間','金額'].forEach(function(h){ body += '<th>' + h + '</th>'; });
+  body += '</tr></thead><tbody>';
+  monthRecs.forEach(function(r) {
+    var amt = parseFloat(r.itemAmount) || 0;
+    body += '<tr><td class="td-l">' + (r.itemName || defaultItemName) + '</td><td class="td-l">' + r.date + '</td><td>' + (r.startTime||'-') + '</td><td>' + (r.endTime||'-') + '</td><td>' + (r.duration||'-') + '</td><td>' + fmtYen(amt) + '</td></tr>';
+  });
+  body += '<tr class="tr-total"><td class="td-l" colspan="4">小計（' + monthRecs.length + '日）</td><td></td><td>' + fmtYen(subtotal) + '</td></tr>';
+  body += '<tr class="tr-total"><td class="td-l" colspan="4">消費税（' + taxRate + '%）</td><td></td><td>' + fmtYen(tax) + '</td></tr>';
+  body += '<tr class="tr-total"><td class="td-l" colspan="4"><strong>合計</strong></td><td></td><td><strong>' + fmtYen(total) + '</strong></td></tr>';
+  body += '</tbody></table>';
+  body += '<div class="pi-note">お支払い条件：' + paymentNote + '<br>';
+  if (bankInfo) body += '振込先：' + bankInfo + '<br>';
+  body += '</div>';
+  var fullHtml = '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">'
+    + '<title>請求書_' + ym + '</title><style>'
+    + '@page{size:A4 portrait;margin:10mm 12mm;}'
+    + '*{box-sizing:border-box;}'
+    + 'body{font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;color:#000;background:#fff;font-size:10px;margin:0;padding:0;}'
+    + '.pi-title{font-size:18px;font-weight:bold;text-align:center;margin-bottom:8px;letter-spacing:4px;}'
+    + '.pi-meta{display:flex;justify-content:space-between;margin-bottom:6px;}'
+    + '.pi-sub{font-size:9px;color:#555;margin-bottom:2px;}'
+    + '.pi-from{text-align:right;line-height:1.5;font-size:9px;}'
+    + '.pi-to{font-size:12px;font-weight:bold;border-bottom:2px solid #000;padding-bottom:3px;margin-bottom:6px;}'
+    + '.pi-total-box{border:2px solid #000;padding:6px 16px;text-align:center;margin-bottom:6px;}'
+    + '.pi-total-lbl{font-size:10px;margin-bottom:2px;}'
+    + '.pi-total-val{font-size:18px;font-weight:bold;}'
+    + '.pi-table{width:100%;border-collapse:collapse;margin-bottom:6px;}'
+    + '.pi-table th{background:#333;color:#fff;padding:3px 6px;text-align:center;font-size:9px;}'
+    + '.pi-table td{padding:3px 6px;border:1px solid #ccc;text-align:center;font-size:9px;}'
+    + '.td-l{text-align:left;}'
+    + '.tr-total td{background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:3px 6px;}'
+    + '.pi-note{font-size:8px;color:#555;border-top:1px solid #ccc;padding-top:6px;line-height:1.6;}'
+    + '.pi-invoice-no{font-size:8px;color:#333;font-weight:bold;}'
+    + '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.no-print{display:none;}}'
+    + '</style></head><body>' + body
+    + '<div class="no-print" style="text-align:center;margin:16px 0;"><button onclick="window.close()" style="background:#2C3E50;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:14px;cursor:pointer;">✕ 閉じて日報に戻る</button></div>'
+    + '<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var w = window.open('', '_blank');
+  if (!w) {
+    var fallbackBlob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    var fallbackA = document.createElement('a');
+    fallbackA.href = URL.createObjectURL(fallbackBlob);
+    fallbackA.download = '請求書_' + ym.replace('年','').replace('月','') + '.html';
+    fallbackA.click();
+    URL.revokeObjectURL(fallbackA.href);
+    alert('ポップアップがブロックされているため、HTMLファイルをダウンロードしました。\nそのファイルをブラウザで開いてCtrl+Pで印刷できます。');
+    return;
+  }
+  w.document.open(); w.document.write(fullHtml); w.document.close();
+}
+
+function buildSettingsTab(c) {
+  var licBox = el('div', 'settings-box');
+  licBox.style.marginBottom = '12px';
+  var licInner = document.createElement('div');
+  licInner.id = 'license-info-box';
+  licInner.style.cssText = 'padding:4px 0;';
+  // 認証済みならその場で描画、未認証なら「未認証」を表示
+  if (window._licenseKey && window._deviceId) {
+    if (typeof window.renderLicenseInfo === 'function') {
+      window.renderLicenseInfo(window._licenseKey, window._deviceId, window._licenseDeviceCount || null);
+    }
+  } else {
+    var gasEmpty = true; // GAS URLが未設定かどうかは認証モジュール側で管理
+    licInner.innerHTML =
+      '<div style="font-size:11px;color:#c47a20;letter-spacing:2px;font-weight:bold;margin-bottom:8px;">🔑 ライセンス情報</div>' +
+      '<div style="font-size:12px;color:#7a5030;">未認証です。アプリを再読み込みして認証してください。</div>' +
+      '<button onclick="location.reload()" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#e8920a,#f5b842);color:#1a1208;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:bold;cursor:pointer;">🔄 再読み込みして認証</button>';
+  }
+  licBox.appendChild(licInner);
+  c.appendChild(licBox);
+  // renderLicenseInfoが後から呼ばれたとき（バックグラウンド更新）も反映される
+  // → window.renderLicenseInfoはlicense-info-boxのIDを直接更新するので自動反映される
+  c.appendChild(secLbl('⚙ 基本設定'));
+  var box1 = el('div', 'settings-box');
+  box1.appendChild(el('div', 'settings-box-title', '🏢 自社情報'));
+  [
+    ['屋号・会社名', 'myName', 'text', '例: 山田運輸'],
+    ['住所', 'myAddress', 'text', '例: 東京都渋谷区○○1-2-3'],
+    ['電話番号', 'myTel', 'tel', '例: 03-xxxx-xxxx'],
+    ['メールアドレス', 'email', 'email', '例: xxx@example.com'],
+    ['適格請求書発行事業者 登録番号', 'invoiceNo', 'text', '例: T1234567890123（任意）'],
+  ].forEach(function(f) {
+    var w = el('div'); w.style.marginBottom = '10px';
+    w.appendChild(el('div', 'fld-lbl', f[0]));
+    w.appendChild(mkInp(f[2], invSettings[f[1]], f[3], function(key) { return function(v) { invSettings[key] = v; }; }(f[1])));
+    box1.appendChild(w);
+  });
+  c.appendChild(box1);
+  var box2 = el('div', 'settings-box');
+  box2.appendChild(el('div', 'settings-box-title', '🧾 請求設定'));
+  [
+    ['請求先（委託先）名', 'clientName', 'text', ''],
+    ['品名（デフォルト）', 'itemName', 'text', '例: 配送業務委託費'],
+    ['消費税率（%）', 'taxRate', 'number', '10'],
+    ['支払条件', 'paymentNote', 'text', '例: 当月末払い'],
+    ['振込先', 'bankInfo', 'text', '例: ○○銀行 △△支店 普通 0000000'],
+  ].forEach(function(f) {
+    var w = el('div'); w.style.marginBottom = '10px';
+    w.appendChild(el('div', 'fld-lbl', f[0]));
+    w.appendChild(mkInp(f[2], invSettings[f[1]], f[3], function(key) { return function(v) { invSettings[key] = v; }; }(f[1])));
+    box2.appendChild(w);
+  });
+  c.appendChild(box2);
+  var flash = el('div', 'settings-flash', settingsFlash);
+  var saveBtn = el('button', 'settings-save-btn', '✓ 設定を保存');
+  saveBtn.addEventListener('click', function() {
+    lsSet(IK, invSettings);
+    updateHeader();
+    updatePWA();
+    settingsFlash = '✅ 保存しました';
+    flash.textContent = settingsFlash;
+    setTimeout(function() { settingsFlash = ''; flash.textContent = ''; }, 3000);
+  });
+  c.appendChild(saveBtn);
+  c.appendChild(flash);
+  c.appendChild(secLbl('🏢 取引先管理'));
+  var clientsNote = el('div', 'hint-sm');
+  clientsNote.style.marginBottom = '10px';
+  clientsNote.textContent = '委託先ごとに品名・消費税率・支払条件・振込先を登録できます。請求書タブで取引先を選択すると自動反映されます。';
+  c.appendChild(clientsNote);
+  var clients = lsGet(CK) || [];
+  clients.forEach(function(cl) {
+    var card = el('div', 'client-card');
+    var body = el('div', 'client-card-body');
+    body.appendChild(el('div', 'client-card-name', '🏢 ' + cl.name));
+    var sub = el('div', 'client-card-sub');
+    var billingLabel = cl.billingType === 'hourly'
+      ? '時間単価: ¥' + (cl.hourlyRate || '3000') + '/h　休憩: ' + (cl.breakMin || '60') + '分'
+      : '日額固定';
+    sub.textContent = '品名: ' + (cl.itemName || '配送業務委託費') + '\n請求: ' + billingLabel + '\n税率: ' + (cl.taxRate || '10') + '%　' + (cl.paymentNote || '');
+    if (cl.bankInfo) sub.textContent += '\n振込先: ' + cl.bankInfo;
+    sub.style.whiteSpace = 'pre-line';
+    body.appendChild(sub);
+    card.appendChild(body);
+    var acts = el('div', 'client-card-acts');
+    var eb = el('button', 'client-edit-btn', '✏️ 編集');
+    eb.addEventListener('click', function() {
+      editClientId = cl.id; clientForm = Object.assign({}, cl); showClientForm = true; render();
+    });
+    var db = el('button', 'client-del-btn', '✕');
+    db.addEventListener('click', function() {
+      if (!confirm(cl.name + 'を削除しますか？')) return;
+      var all = (lsGet(CK) || []).filter(function(x) { return x.id !== cl.id; });
+      lsSet(CK, all); render();
+    });
+    acts.appendChild(eb); acts.appendChild(db);
+    card.appendChild(acts);
+    c.appendChild(card);
+  });
+  if (!clients.length) {
+    var noClient = el('div', 'empty'); noClient.style.padding = '16px 0';
+    noClient.textContent = '取引先が未登録です'; c.appendChild(noClient);
+  }
+  if (showClientForm) {
+    var cf = el('div', 'client-form');
+    cf.appendChild(el('div', 'client-form-title', editClientId ? '✏️ 取引先を編集' : '➕ 取引先を追加'));
+    [
+      ['委託先名（必須）', 'name', 'text', '例: ○○物流株式会社'],
+      ['品名', 'itemName', 'text', '例: 配送業務委託費'],
+    ].forEach(function(f) {
+      var w = el('div'); w.style.marginBottom = '8px';
+      w.appendChild(el('div', 'fld-lbl', f[0]));
+      w.appendChild(mkInp(f[2], clientForm[f[1]], f[3], function(key) { return function(v) { clientForm[key] = v; }; }(f[1])));
+      cf.appendChild(w);
+    });
+    var btW = el('div'); btW.style.marginBottom = '8px';
+    btW.appendChild(el('div', 'fld-lbl', '請求方式'));
+    var btRow = el('div'); btRow.style.cssText = 'display:flex;gap:8px;';
+    ['fixed', 'hourly'].forEach(function(val) {
+      var lbl = el('label'); lbl.style.cssText = 'display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;background:#1a2018;border:1px solid ' + (clientForm.billingType === val ? '#4a7c3f' : '#2e4028') + ';border-radius:6px;padding:10px 12px;font-size:13px;color:#c8d4b8;';
+      var radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'billingType'; radio.value = val; radio.checked = (clientForm.billingType || 'fixed') === val;
+      radio.addEventListener('change', function() { clientForm.billingType = val; render(); });
+      lbl.appendChild(radio);
+      lbl.appendChild(document.createTextNode(val === 'fixed' ? '🏷 日額固定' : '⏱ 時間単価'));
+      btRow.appendChild(lbl);
+    });
+    btW.appendChild(btRow); cf.appendChild(btW);
+    if ((clientForm.billingType || 'fixed') === 'hourly') {
+      var hrW = el('div'); hrW.style.marginBottom = '8px';
+      hrW.appendChild(el('div', 'fld-lbl', '時間単価（円/時）'));
+      hrW.appendChild(mkInp('number', clientForm.hourlyRate || '3000', '例: 3000', function(v) { clientForm.hourlyRate = v; }));
+      cf.appendChild(hrW);
+      var bkW = el('div'); bkW.style.marginBottom = '8px';
+      bkW.appendChild(el('div', 'fld-lbl', '休憩時間（分）'));
+      bkW.appendChild(mkInp('number', clientForm.breakMin || '60', '例: 60', function(v) { clientForm.breakMin = v; }));
+      bkW.appendChild(el('div', 'hint-sm', '稼働時間からこの分を引いた時間で計算します'));
+      cf.appendChild(bkW);
+    }
+    [
+      ['消費税率（%）', 'taxRate', 'number', '10'],
+      ['支払条件', 'paymentNote', 'text', '例: 当月末払い'],
+      ['振込先', 'bankInfo', 'text', '例: ○○銀行 △△支店 普通 0000000'],
+    ].forEach(function(f) {
+      var w = el('div'); w.style.marginBottom = '8px';
+      w.appendChild(el('div', 'fld-lbl', f[0]));
+      w.appendChild(mkInp(f[2], clientForm[f[1]], f[3], function(key) { return function(v) { clientForm[key] = v; }; }(f[1])));
+      cf.appendChild(w);
+    });
+    cf.appendChild(row2s(
+      (function() {
+        var b = el('button', 'cancel-btn', 'キャンセル');
+        b.addEventListener('click', function() { showClientForm = false; editClientId = null; clientForm = { name:'', itemName:'配送業務委託費', paymentNote:'当月末払い', taxRate:'10', bankInfo:'', billingType:'fixed', hourlyRate:'3000', breakMin:'60' }; render(); });
+        return b;
+      })(),
+      (function() {
+        var b = el('button', 'ok-btn', '保存');
+        b.addEventListener('click', function() {
+          if (!clientForm.name) { alert('委託先名を入力してください'); return; }
+          var all = lsGet(CK) || [];
+          if (editClientId) {
+            all = all.map(function(x) { return x.id === editClientId ? Object.assign({}, clientForm, { id: editClientId }) : x; });
+          } else {
+            all.push(Object.assign({}, clientForm, { id: Date.now() }));
+          }
+          lsSet(CK, all);
+          showClientForm = false; editClientId = null; clientForm = { name:'', itemName:'配送業務委託費', paymentNote:'当月末払い', taxRate:'10', bankInfo:'', billingType:'fixed', hourlyRate:'3000', breakMin:'60' };
+          render();
+        });
+        return b;
+      })()
+    ));
+    c.appendChild(cf);
+  } else {
+    var addClientBtn = el('button', 'client-add-btn', '＋ 取引先を追加');
+    addClientBtn.addEventListener('click', function() { showClientForm = true; editClientId = null; clientForm = { name:'', itemName:'配送業務委託費', paymentNote:'当月末払い', taxRate:'10', bankInfo:'', billingType:'fixed', hourlyRate:'3000', breakMin:'60' }; render(); });
+    c.appendChild(addClientBtn);
+  }
+  c.appendChild(secLbl('💾 データ管理'));
+  c.appendChild(buildSyncBox());
+  var danger = el('div', 'settings-danger');
+  danger.appendChild(el('div', 'settings-danger-title', '⚠️ 危険な操作'));
+  var resetBtn = el('button', 'settings-reset-btn', '🗑 すべてのデータを初期化する');
+  resetBtn.addEventListener('click', function() {
+    if (!confirm('⚠️ すべてのデータを完全に削除します。\n\nエクスポートでバックアップは取りましたか？\n\n「OK」を押すと取り消せません。')) return;
+    [SK, OK, DK, FK, IK, BK, TK, VK, CK, SUK].forEach(function(k) { lsDel(k); });
+    location.reload();
+  });
+  danger.appendChild(resetBtn);
+  danger.appendChild(el('div', 'hint-sm', '※ 実行前に必ずエクスポートでバックアップを取ってください'));
+  c.appendChild(danger);
+}
+
+function daysDiff(dateStr) {
+  if (!dateStr) return null;
+  var target = new Date(dateStr); var now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((target - now) / (1000 * 60 * 60 * 24));
+}
+function alertLevel(days) {
+  if (days === null) return 'ok';
+  if (days < 0) return 'over';
+  if (days <= 30) return 'warn';
+  return 'ok';
+}
+// vehicleAlertBanners は buildAlertBanners に統合済み
+
+var VEHFORM_DEFAULT = {
+  name: '', shaken: '', jibaiseki: '', ninni: '',
+  oilLast: '', oilInterval: '10000', oilWarnAt: '3000',    oilMemo: '',
+  filterLast: '', filterInterval: '15000', filterWarnAt: '2000', filterMemo: '',
+  tireLast:   '', tireInterval:   '40000', tireWarnAt:   '5000', tireMemo:   ''
+};
+var MAINT_ITEMS = [
+  { emoji: '🔧', label: 'エンジンオイル', lastKey: 'oilLast',    intKey: 'oilInterval',   warnKey: 'oilWarnAt',    memoKey: 'oilMemo',    defInt: '10000', defWarn: '3000' },
+  { emoji: '🧹', label: 'エアフィルター', lastKey: 'filterLast', intKey: 'filterInterval', warnKey: 'filterWarnAt', memoKey: 'filterMemo', defInt: '15000', defWarn: '2000' },
+  { emoji: '🔄', label: 'タイヤ',         lastKey: 'tireLast',   intKey: 'tireInterval',   warnKey: 'tireWarnAt',   memoKey: 'tireMemo',   defInt: '40000', defWarn: '5000' },
+];
+var showVehForm = false; var editVehId = null; var vehForm = Object.assign({}, VEHFORM_DEFAULT);
+
+function buildVehicleTab(c) {
+  var vehicles = lsGet(VK) || [];
+  var latOdo = ((records.find(function(r) { return r.odometerEnd; }) || {}).odometerEnd) || '';
+  var cur = parseFloat(latOdo);
+
+  c.appendChild(secLbl('🚗 車両・保険管理'));
+
+  if (vehicles.length === 0 && !showVehForm) {
+    var empty = el('div', 'empty', '車両が登録されていません\n下のボタンから追加してください');
+    empty.style.paddingBottom = '16px'; c.appendChild(empty);
+  }
+
+  vehicles.forEach(function(v) {
+    // ── 保険アラートレベル計算 ──
+    var insItems = [{ label: '車検', date: v.shaken }, { label: '自賠責保険', date: v.jibaiseki }, { label: '任意保険', date: v.ninni }];
+    var worstLvl = 'ok';
+    insItems.forEach(function(item) { var lvl = alertLevel(daysDiff(item.date)); if (lvl === 'over') worstLvl = 'over'; else if (lvl === 'warn' && worstLvl !== 'over') worstLvl = 'warn'; });
+    // メンテナンスアラートも考慮
+    if (!isNaN(cur)) {
+      MAINT_ITEMS.forEach(function(m) {
+        var last = parseFloat(v[m.lastKey]), interval = parseFloat(v[m.intKey] || m.defInt);
+        if (isNaN(last) || isNaN(interval)) return;
+        var rem = (last + interval) - cur;
+        var warnAt = parseFloat(v[m.warnKey] || m.defWarn);
+        if (rem <= 0 && worstLvl !== 'over') worstLvl = 'over';
+        else if (rem <= warnAt && worstLvl === 'ok') worstLvl = 'warn';
+      });
+    }
+
+    var card = el('div', 'veh-card alert-' + worstLvl);
+    var hd = el('div', 'veh-hd');
+    var nameEl = el('div', 'veh-name', '🚚 ' + (v.name || '車両'));
+    var acts = el('div'); acts.style.cssText = 'display:flex;gap:10px;align-items:center;';
+    var eb = el('button', 'veh-edit-btn', '✏️ 編集');
+    eb.addEventListener('click', function() {
+      editVehId = v.id;
+      vehForm = Object.assign(Object.assign({}, VEHFORM_DEFAULT), v);
+      showVehForm = true; render();
+    });
+    var db = el('button', 'veh-del-btn', '✕');
+    db.addEventListener('click', function() {
+      if (!confirm(v.name + 'を削除しますか？')) return;
+      var all = (lsGet(VK) || []).filter(function(x) { return x.id !== v.id; });
+      lsSet(VK, all); render();
+    });
+    acts.appendChild(eb); acts.appendChild(db); hd.appendChild(nameEl); hd.appendChild(acts); card.appendChild(hd);
+
+    // 保険・車検
+    insItems.forEach(function(item) {
+      if (!item.date) return;
+      var days = daysDiff(item.date); var lvl = alertLevel(days);
+      var row = el('div'); row.style.marginBottom = '8px';
+      var info = el('div', 'veh-info', item.label + '  ' + item.date.replace(/-/g, '/'));
+      var daysEl = el('div', 'veh-days ' + lvl);
+      if (days === null) daysEl.textContent = '未設定';
+      else if (days < 0) daysEl.textContent = '⛔ ' + Math.abs(days) + '日超過';
+      else if (days === 0) daysEl.textContent = '⚠️ 本日期限';
+      else daysEl.textContent = (lvl === 'warn' ? '⚠️ ' : '✅ ') + 'あと ' + days + '日';
+      var pct = days === null ? 100 : Math.max(0, Math.min(100, days / 90 * 100));
+      var pbg = el('div', 'veh-pb-bg'); var pbf = el('div', 'veh-pb-fill');
+      pbf.style.cssText = 'width:' + pct + '%;background:' + (lvl === 'over' ? '#8f2f2f' : lvl === 'warn' ? '#8f6f1f' : '#4a7c3f') + ';';
+      pbg.appendChild(pbf); row.appendChild(info); row.appendChild(daysEl); row.appendChild(pbg); card.appendChild(row);
+    });
+
+    // メンテナンス（オドメーターが設定されている場合のみ表示）
+    var hasMaint = MAINT_ITEMS.some(function(m) { return v[m.lastKey]; });
+    if (hasMaint && !isNaN(cur)) {
+      var mSep = el('div'); mSep.style.cssText = 'border-top:1px solid #3a2a10;margin:10px 0 8px;';
+      card.appendChild(mSep);
+      MAINT_ITEMS.forEach(function(m) {
+        var last = parseFloat(v[m.lastKey]);
+        if (isNaN(last)) return;
+        var interval = parseFloat(v[m.intKey] || m.defInt);
+        var rem = (last + interval) - cur;
+        var warnAt = parseFloat(v[m.warnKey] || m.defWarn);
+        var isOver = rem <= 0, isWarn = rem <= warnAt;
+        var pct2 = Math.min(((cur - last) / interval) * 100, 100);
+        var mRow = el('div'); mRow.style.marginBottom = '6px';
+        var mInfo = el('div', 'veh-info', m.emoji + ' ' + m.label);
+        var mVal = el('div', 'veh-days ' + (isOver ? 'over' : isWarn ? 'warn' : 'ok'));
+        mVal.style.fontSize = '14px';
+        mVal.textContent = isOver
+          ? '⛔ ' + fmtNum(Math.abs(Math.round(rem))) + ' km超過'
+          : (isWarn ? '⚠️ ' : '✅ ') + '残り ' + fmtNum(Math.round(rem)) + ' km';
+        var pbg2 = el('div', 'veh-pb-bg'); var pbf2 = el('div', 'veh-pb-fill');
+        pbf2.style.cssText = 'width:' + pct2 + '%;background:' + (isOver ? '#8f2f2f' : isWarn ? '#8f6f1f' : '#4a7c3f') + ';';
+        pbg2.appendChild(pbf2);
+        mRow.appendChild(mInfo); mRow.appendChild(mVal); mRow.appendChild(pbg2);
+        // メモがあれば表示
+        if (v[m.memoKey]) {
+          var mMemo = el('div'); mMemo.style.cssText = 'font-size:11px;color:#7a5030;margin-top:2px;padding-left:2px;';
+          mMemo.textContent = '📝 ' + v[m.memoKey];
+          mRow.appendChild(mMemo);
+        }
+        card.appendChild(mRow);
+      });
+    }
+    c.appendChild(card);
+  });
+
+  // ── 車両フォーム ──
+  if (showVehForm) {
+    var form2 = el('div', 'veh-form');
+    form2.appendChild(el('div', 'veh-form-title', editVehId ? '✏️ 車両を編集' : '➕ 車両を追加'));
+
+    // 基本情報
+    [['車両名・ナンバー', 'name', 'text', '例: ハイゼット S331V'],
+     ['車検満了日', 'shaken', 'date', ''],
+     ['自賠責保険 満了日', 'jibaiseki', 'date', ''],
+     ['任意保険 満了日', 'ninni', 'date', '']
+    ].forEach(function(f) {
+      var w = el('div'); w.style.marginBottom = '8px';
+      w.appendChild(el('div', 'fld-lbl', f[0]));
+      var inp = mkInp(f[2], vehForm[f[1]], f[3], function(key) { return function(v) { vehForm[key] = v; }; }(f[1]));
+      w.appendChild(inp); form2.appendChild(w);
+    });
+
+    // メンテナンス記録
+    var mLbl = el('div'); mLbl.style.cssText = 'font-size:11px;color:#c47a20;letter-spacing:2px;font-weight:bold;margin:14px 0 10px;';
+    mLbl.textContent = '🔧 メンテナンス記録';
+    form2.appendChild(mLbl);
+
+    MAINT_ITEMS.forEach(function(m) {
+      var mSec = el('div'); mSec.style.cssText = 'background:#1a1208;border-radius:6px;padding:10px;margin-bottom:8px;';
+      var mTitle = el('div'); mTitle.style.cssText = 'font-size:12px;color:#8fcf7a;font-weight:bold;margin-bottom:8px;';
+      mTitle.textContent = m.emoji + ' ' + m.label;
+      mSec.appendChild(mTitle);
+      var mGrid = el('div'); mGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;';
+      [
+        ['前回交換 (km)', m.lastKey,  'text', '例: 45000'],
+        ['間隔 (km)',     m.intKey,   'text', m.defInt],
+        ['警告距離 (km)', m.warnKey,  'text', m.defWarn],
+      ].forEach(function(f) {
+        var fw = el('div');
+        fw.appendChild(el('div', 'fld-lbl', f[0]));
+        fw.appendChild(mkInp('number', vehForm[f[1]], f[3], function(key) { return function(v) { vehForm[key] = v; }; }(f[1])));
+        mGrid.appendChild(fw);
+      });
+      mSec.appendChild(mGrid);
+      // メモ欄
+      var memoW = el('div'); memoW.style.marginTop = '6px';
+      memoW.appendChild(el('div', 'fld-lbl', 'メモ'));
+      var memoTa = el('textarea', 'inp');
+      memoTa.rows = 2; memoTa.style.resize = 'vertical'; memoTa.style.fontSize = '13px';
+      memoTa.placeholder = '例: ○○カーサービスで交換、次回は銘柄変更予定';
+      memoTa.value = vehForm[m.memoKey] || '';
+      memoTa.addEventListener('input', function(key) { return function() { vehForm[key] = memoTa.value; }; }(m.memoKey));
+      memoW.appendChild(memoTa);
+      mSec.appendChild(memoW);
+      form2.appendChild(mSec);
+    });
+
+    form2.appendChild(row2s(
+      (function() {
+        var b = el('button', 'cancel-btn', 'キャンセル');
+        b.addEventListener('click', function() { showVehForm = false; editVehId = null; vehForm = Object.assign({}, VEHFORM_DEFAULT); render(); });
+        return b;
+      })(),
+      (function() {
+        var b = el('button', 'ok-btn', '保存');
+        b.addEventListener('click', function() {
+          if (!vehForm.name) { alert('車両名を入力してください'); return; }
+          var all = lsGet(VK) || [];
+          if (editVehId) { all = all.map(function(x) { return x.id === editVehId ? Object.assign({}, vehForm, { id: editVehId }) : x; }); }
+          else { all.push(Object.assign({}, vehForm, { id: Date.now() })); }
+          lsSet(VK, all); showVehForm = false; editVehId = null; vehForm = Object.assign({}, VEHFORM_DEFAULT); render();
+        });
+        return b;
+      })()
+    ));
+    c.appendChild(form2);
+  } else {
+    if (vehicles.length === 0) {
+      var addBtn = el('button', 'veh-add-btn', '＋ 車両を追加');
+      addBtn.addEventListener('click', function() { showVehForm = true; editVehId = null; vehForm = Object.assign({}, VEHFORM_DEFAULT); render(); });
+      c.appendChild(addBtn);
+    }
+  }
+}
+
+
+function saveRecord() {
+  if (!form.date) return;
+  var rec = Object.assign({}, form, {
+    duration: calcDuration(form.startTime, form.endTime),
+    distance: calcDistance(form.odometerStart, form.odometerEnd),
+    prevFuelOdometer: form.odometerFuel ? lastFuel : '',
+    fuelEfficiency: calcFuelEff(form.odometerFuel, form.fuel, lastFuel),
+    id: genId()
+  });
+  records.unshift(rec); lsSet(SK, records); lsDel(DK);
+  if (form.odometerFuel) { lastFuel = form.odometerFuel; lsSet(FK, lastFuel); }
+  form = { date: today(), startTime: '', endTime: '', odometerStart: form.odometerEnd || '', odometerEnd: '', odometerFuel: '', fuel: '', fuelCost: '', memo: '', itemName: form.itemName || '', itemAmount: form.itemAmount || '', clientId: form.clientId || null };
+  savedFlash = true; render();
+  setTimeout(function() { savedFlash = false; render(); }, 2000);
+}
+
+function deleteRecord(id) {
+  if (!confirm('この日報を削除しますか？')) return;
+  records = records.filter(function(r) { return r.id !== id; }); lsSet(SK, records); render();
+}
+
+function saveEdit() {
+  records = records.map(function(r) {
+    if (r.id !== editingId) return r;
+    return Object.assign({}, editForm, { duration: calcDuration(editForm.startTime, editForm.endTime),
+      distance: calcDistance(editForm.odometerStart, editForm.odometerEnd),
+      fuelEfficiency: calcFuelEff(editForm.odometerFuel, editForm.fuel,
+        editForm.prevFuelOdometer !== undefined && editForm.prevFuelOdometer !== ''
+          ? editForm.prevFuelOdometer : lastFuel
+      ) || editForm.fuelEfficiency || ''
+    });
+  });
+  lsSet(SK, records); editingId = null; editForm = {}; render();
+}
+
+function makeXls(headers, rows, sheetName) {
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n'
+    + '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n'
+    + '<Worksheet ss:Name="' + sheetName + '"><Table>\n';
+  function cell(v, type) {
+    var t = type || (typeof v === 'number' ? 'Number' : 'String');
+    var s = v == null ? '' : String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return '<Cell><Data ss:Type="' + t + '">' + s + '</Data></Cell>';
+  }
+  xml += '<Row>' + headers.map(function(h){ return cell(h); }).join('') + '</Row>\n';
+  rows.forEach(function(r) {
+    xml += '<Row>' + headers.map(function(h){ var v = r[h]; return cell(v === '' || v == null ? '' : v, typeof v === 'number' ? 'Number' : 'String'); }).join('') + '</Row>\n';
+  });
+  xml += '</Table></Worksheet></Workbook>'; return xml;
+}
+
+function downloadXls(xml, filename) {
+  downloadBlob(xml, filename, 'application/vnd.ms-excel;charset=utf-8');
+}
+
+function exportFuelToLedger() {
+  var fuelRecs = records.filter(function(r) { return r.fuel && parseFloat(r.fuel) > 0; });
+  fuelRecs.sort(function(a, b) { return a.date < b.date ? -1 : 1; });
+  var headers = ['No.', '日付', '内容・メモ', '科目', '金額（円）', '支払方法', 'レシート'];
+  var rows = fuelRecs.map(function(r, i) {
+    return { 'No.': i+1, '日付': r.date, '内容・メモ': '給油 ' + r.fuel + 'L（走行距離計：' + (r.odometerFuel || r.odometerEnd || '') + ' km）', '科目': '燃料費', '金額（円）': r.fuelCost ? parseFloat(r.fuelCost) : '', '支払方法': '', 'レシート': '' };
+  });
+  downloadXls(makeXls(headers, rows, '燃料費'), '燃料費_経費台帳用_' + today() + '.xls');
+}
+
+function exportData(targetRecords) {
+  var recs = targetRecords || records;
+  var headers = ['日付','作業開始','作業終了','稼働時間','開始時走行距離_km','終了時走行距離_km','走行距離_km','給油時走行距離_km','給油量_L','給油金額_円','燃費_kmL','品名','請求金額_円','メモ'];
+  var rows = recs.map(function(r) {
+    return { '日付': r.date||'', '作業開始': r.startTime||'', '作業終了': r.endTime||'', '稼働時間': r.duration||'',
+      '開始時走行距離_km': r.odometerStart ? parseFloat(r.odometerStart) : '',
+      '終了時走行距離_km': r.odometerEnd ? parseFloat(r.odometerEnd) : '',
+      '走行距離_km': r.distance ? parseFloat(r.distance) : '',
+      '給油時走行距離_km': r.odometerFuel ? parseFloat(r.odometerFuel) : '',
+      '給油量_L': r.fuel ? parseFloat(r.fuel) : '',
+      '給油金額_円': r.fuelCost ? parseFloat(r.fuelCost) : '',
+      '燃費_kmL': r.fuelEfficiency ? parseFloat(r.fuelEfficiency) : '',
+      '品名': r.itemName||'', '請求金額_円': r.itemAmount ? parseFloat(r.itemAmount) : '', 'メモ': r.memo||'' };
+  });
+  var suffix = targetRecords && listMonth ? '_' + listMonth : '';
+  downloadXls(makeXls(headers, rows, '日報'), '配送日報' + suffix + '_' + today() + '.xls');
+}
+
+document.getElementById('tabs').addEventListener('click', function(e) {
+  var btn = e.target.closest('.tab-btn'); if (!btn) return;
+  currentView = btn.dataset.tab; render(true); // タブ切り替えはスクロールリセット
+});
+
+if (!setupDone) {
+  buildSetupScreen();
+} else {
+  document.getElementById('main-header').style.display = '';
+  updateHeader();
+  render();
+}
+
+function updatePWA() {
+  var appName = (invSettings.myName || '配送日報') + ' 日報';
+  var manifest = { name: appName, short_name: invSettings.myName || '配送日報', description: '配送日報・請求書・経費管理', start_url: '.', display: 'standalone', orientation: 'portrait', background_color: '#0f1410', theme_color: '#0f1410', icons: [{ src: document.getElementById('pwa-favicon').href, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] };
+  var mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(mBlob);
+}
+
+})();
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════
+// haisonikko フロントエンド認証モジュール v2（ES5互換）
+// ════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  var LS_KEY  = 'haisonikko_license';
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbxve-YBA-QTAAQgBmm4J3fO2lTSri1HAW1L_xTls2SG_NijlRIKZLYHM6wGHnStOV-bBw/exec';
+  // ★ GAS側のスクリプトプロパティに設定した値と同じものを指定
+  // （悪意ある第三者が直接GAS URLを叩くのを防ぐ簡易ガード）
+  // 十分に長くランダムな文字列（例: openssl rand -hex 32 で生成）を推奨
+  var SHARED_SECRET = 'cCy3KsgJ42NXle5SG6V7W98juhZmBz1vox0QnMbtwHdORAPU';
+
+  // ── SHA-256（Web Crypto API、Promise返却） ──
+  function sha256(str) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+      .then(function(buf) {
+        return Array.from(new Uint8Array(buf))
+          .map(function(b) { return ('0' + b.toString(16)).slice(-2); })
+          .join('');
+      });
+  }
+
+  // ── デバイスID生成（localStorage保存 + UUIDベース） ──
+  // 初回のみランダムIDを生成してlocalStorageに保存。以降は同じIDを返す。
+  // ブラウザ自動更新等でuserAgentが変わっても影響を受けない安定した識別子。
+  var DEVICE_KEY = 'haisonikko_device_id';
+  function getDeviceId() {
+    // 既存のデバイスIDがあればそれを使う（再認証時の一貫性確保）
+    try {
+      var stored = localStorage.getItem(DEVICE_KEY);
+      if (stored && stored.indexOf('DEV-') === 0) {
+        window._deviceId = stored;
+        return stored;
+      }
+    } catch (e) {}
+
+    // 初回：UUIDベースのランダムIDを生成
+    var id;
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      // UUID v4 の英数字部分12文字（48bit相当、衝突確率は事実上ゼロ）
+      id = 'DEV-' + crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
+    } else {
+      // 古いブラウザ向けフォールバック（タイムスタンプ+乱数）
+      id = 'DEV-' + (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toUpperCase().slice(0, 12);
+    }
+
+    try { localStorage.setItem(DEVICE_KEY, id); } catch (e) {}
+    window._deviceId = id;
+    return id;
+  }
+
+  // ── ローカルストレージ ──
+  function loadLicense() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || null; } catch (e) { return null; }
+  }
+  function saveLicense(data) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  // ── サーバー検証 ──
+  function validateOnServer(key, deviceId) {
+    if (!GAS_URL) return Promise.resolve({ ok: false, code: 'NO_SERVER' });
+    var url = GAS_URL
+      + '?action=validate'
+      + '&key=' + encodeURIComponent(key)
+      + '&device=' + encodeURIComponent(deviceId)
+      + '&s=' + encodeURIComponent(SHARED_SECRET)  // 共有シークレット（簡易ガード）
+      + '&t=' + Date.now();
+    return fetch(url).then(function(r) { return r.json(); }).catch(function() { return null; });
+  }
+
+  // ── トークン有効期限チェック ──
+  function isTokenValid(saved, deviceId) {
+    if (!saved || !saved.token || !saved.expiry || !saved.device) return false;
+    if (saved.device !== deviceId) return false;
+    return Date.now() <= new Date(saved.expiry).getTime() + 30 * 24 * 60 * 60 * 1000;
+  }
+
+  // ── 設定タブ: ライセンス情報描画 ──
+  function renderLicenseInfo(key, deviceId, count) {
+    var box = document.getElementById('license-info-box');
+    if (!box) return;
+    window._licenseDeviceCount = count;
+    var countHtml = (count == null)
+      ? '<span style="color:#7a5030">（オフライン）</span>'
+      : '<span style="color:' + (count >= 3 ? '#ff6b6b' : '#8fcf7a') + ';font-weight:bold;">' + count + '台</span>';
+    var warnHtml = (count != null && count >= 3)
+      ? '<div style="color:#ff6b6b;font-size:11px;margin-top:6px;">⚠️ 複数台での使用が検出されています。</div>' : '';
+    box.innerHTML =
+      '<div style="font-size:11px;color:#c47a20;letter-spacing:2px;font-weight:bold;margin-bottom:8px;">🔑 ライセンス情報</div>' +
+      '<div style="font-size:12px;display:grid;gap:5px;">' +
+        '<div style="color:#a06030;">キー：<span style="color:#f0e6cc;letter-spacing:1px;font-size:11px;">' + key + '</span></div>' +
+        '<div style="color:#a06030;">端末ID：<span style="color:#c8d4b8;">' + deviceId + '</span></div>' +
+        '<div style="color:#a06030;">使用台数：' + countHtml + '<span style="color:#7a5030;font-size:11px;">（このキーの合計）</span></div>' +
+      '</div>' + warnHtml +
+      '<button id="lic-reset-btn" ' +
+        'style="margin-top:10px;width:100%;background:transparent;border:1px solid #8a5010;' +
+        'border-radius:6px;color:#c47a20;padding:6px 12px;font-size:11px;cursor:pointer;">' +
+        '🔄 別のキーで再認証</button>';
+    // ── 再認証ボタンのクリックハンドラ（インラインonclickのクォート衝突回避） ──
+    var resetBtn = document.getElementById('lic-reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        if (confirm('ライセンスをリセットしますか？')) {
+          try { localStorage.removeItem(LS_KEY); } catch (e) {}
+          location.reload();
+        }
+      });
+    }
+  }
+  window.renderLicenseInfo = renderLicenseInfo;
+
+  // ── 認証画面 UI ──
+  function showLicenseScreen(onSuccess) {
+    var overlay = document.createElement('div');
+    overlay.id = 'license-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#1a1208;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;';
+    overlay.innerHTML =
+      '<div style="background:#221a08;border:1px solid #e8920a;border-radius:16px;padding:36px 28px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);">' +
+        '<div style="text-align:center;margin-bottom:24px;"><div style="font-size:32px;margin-bottom:8px;">🚚</div>' +
+          '<div style="font-size:20px;font-weight:bold;color:#ffd166;margin-bottom:4px;">haisonikko</div>' +
+          '<div style="font-size:12px;color:#c47a20;letter-spacing:2px;">配送日報管理アプリ</div></div>' +
+        '<div style="font-size:13px;color:#a06030;margin-bottom:8px;">シリアルキーを入力してください</div>' +
+        '<input id="lic-input" type="text" maxlength="19" placeholder="HISO-XXXX-XXXX-XXXX"' +
+          ' style="width:100%;box-sizing:border-box;background:#241808;border:1px solid #5a3a10;border-radius:8px;color:#f0e6cc;padding:12px 14px;font-size:15px;letter-spacing:2px;outline:none;text-transform:uppercase;margin-bottom:8px;">' +
+        '<div id="lic-err" style="font-size:12px;color:#ff6b6b;min-height:18px;margin-bottom:12px;"></div>' +
+        '<button id="lic-btn" style="width:100%;background:linear-gradient(135deg,#e8920a,#f5b842);color:#1a1208;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:2px;">認証する</button>' +
+        '<div style="font-size:11px;color:#7a5030;text-align:center;margin-top:16px;">BOOTHで購入したキーを入力してください</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    var input = document.getElementById('lic-input');
+    var btn   = document.getElementById('lic-btn');
+    var err   = document.getElementById('lic-err');
+
+    input.addEventListener('input', function() {
+      var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      var raw = v.slice(4);
+      var fmt = 'HISO';
+      if (raw.length > 0) fmt += '-' + raw.slice(0, 4);
+      if (raw.length > 4) fmt += '-' + raw.slice(4, 8);
+      if (raw.length > 8) fmt += '-' + raw.slice(8, 12);
+      this.value = fmt; err.textContent = '';
+    });
+
+    btn.addEventListener('click', function() {
+      var key = input.value.trim().toUpperCase();
+      if (key.replace(/-/g, '').length < 16) {
+        err.textContent = '❌ キーの形式が正しくありません（HISO-XXXX-XXXX-XXXX）'; return;
+      }
+      err.textContent = '🔄 サーバーで確認中...'; err.style.color = '#c47a20';
+      btn.disabled = input.disabled = true;
+      validateOnServer(key, getDeviceId()).then(function(result) {
+        btn.disabled = input.disabled = false;
+        if (!result) {
+          err.textContent = '⚠️ サーバーに接続できません。初回認証にはインターネット接続が必要です。';
+          err.style.color = '#ff6b6b'; return;
+        }
+        if (!result.ok) {
+          var msgs = { INVALID_KEY:'❌ キーが正しくありません', RATE_LIMITED:'⏳ しばらく待ってから再試行してください', SERVER_ERROR:'❌ サーバーエラー', NO_SERVER:'❌ GAS URLが未設定です', DEVICE_LIMIT:'❌ このキーはすでに3台で使用中です。\n不要な端末の⚙設定タブ →「別のキーで再認証」で1台解除してから試してください。' };
+          err.textContent = msgs[result.code] || '❌ 認証に失敗しました'; err.style.color = '#ff6b6b'; return;
+        }
+        overlay.remove();
+        onSuccess(key, result.token, result.expiry, result.deviceCount);
+      });
+    });
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
+    input.focus();
+  }
+
+  // ── 起動処理 ──
+  function init() {
+    var deviceId = getDeviceId();
+    var saved    = loadLicense();
+    if (isTokenValid(saved, deviceId)) {
+      window._licenseKey = saved.key;
+      // 残り30日未満はバックグラウンド更新
+      if ((new Date(saved.expiry) - Date.now()) / 86400000 < 30) {
+        validateOnServer(saved.key, deviceId).then(function(result) {
+          if (result && result.ok) {
+            saveLicense({ key: saved.key, device: deviceId, token: result.token, expiry: result.expiry, deviceCount: result.deviceCount, verifiedAt: Date.now() });
+            renderLicenseInfo(saved.key, deviceId, result.deviceCount);
+          }
+        });
+      }
+      renderLicenseInfo(saved.key, deviceId, saved.deviceCount || null);
+      return;
+    }
+    showLicenseScreen(function(key, token, expiry, deviceCount) {
+      saveLicense({ key: key, device: deviceId, token: token, expiry: expiry, deviceCount: deviceCount, verifiedAt: Date.now() });
+      window._licenseKey = key;
+      renderLicenseInfo(key, deviceId, deviceCount);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<script>
+(function setupPWA() {
+  var size = 512;
+  var cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  var ctx = cv.getContext('2d');
+  var r = size * 0.2;
+  ctx.beginPath();
+  ctx.moveTo(r,0); ctx.lineTo(size-r,0); ctx.quadraticCurveTo(size,0,size,r);
+  ctx.lineTo(size,size-r); ctx.quadraticCurveTo(size,size,size-r,size);
+  ctx.lineTo(r,size); ctx.quadraticCurveTo(0,size,0,size-r);
+  ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
+  var grad = ctx.createLinearGradient(0,0,size,size);
+  grad.addColorStop(0,'#2d1e06'); grad.addColorStop(1,'#1a1208');
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.fillStyle = '#e8920a'; ctx.fillRect(0, size*0.72, size, size*0.06);
+  ctx.font = size*0.42+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🚚', size/2, size*0.44);
+  ctx.fillStyle='#ffd166'; ctx.font='bold '+size*0.09+'px Courier New,monospace';
+  ctx.fillText('配送日報', size/2, size*0.84);
+  var iconUrl = cv.toDataURL('image/png');
+  document.getElementById('pwa-favicon').href = iconUrl;
+  var manifest = { name:'配送日報アプリ', short_name:'配送日報', description:'配送日報・請求書・経費管理', start_url:'.', display:'standalone', orientation:'portrait', background_color:'#0f1410', theme_color:'#0f1410', icons:[{src:iconUrl,sizes:'512x512',type:'image/png',purpose:'any maskable'}] };
+  var mBlob = new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(mBlob);
+  if ('serviceWorker' in navigator) {
+    var swCode = 'var C="dr-v1";self.addEventListener("install",function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(["."]);})});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request).catch(function(){return caches.match(".");});}));});';
+    var swBlob = new Blob([swCode],{type:'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
