@@ -1305,20 +1305,20 @@ function buildSettingsTab(c) {
   var licInner = document.createElement('div');
   licInner.id = 'license-info-box';
   licInner.style.cssText = 'padding:4px 0;';
+  // 先にDOMに追加してから描画（renderLicenseInfoがgetElementByIdで参照するため）
+  licBox.appendChild(licInner);
+  c.appendChild(licBox);
   // 認証済みならその場で描画、未認証なら「未認証」を表示
   if (window._licenseKey && window._deviceId) {
     if (typeof window.renderLicenseInfo === 'function') {
       window.renderLicenseInfo(window._licenseKey, window._deviceId, window._licenseDeviceCount || null);
     }
   } else {
-    var gasEmpty = true; // GAS URLが未設定かどうかは認証モジュール側で管理
     licInner.innerHTML =
       '<div style="font-size:11px;color:#c47a20;letter-spacing:2px;font-weight:bold;margin-bottom:8px;">🔑 ライセンス情報</div>' +
       '<div style="font-size:12px;color:#7a5030;">未認証です。アプリを再読み込みして認証してください。</div>' +
       '<button onclick="location.reload()" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#e8920a,#f5b842);color:#1a1208;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:bold;cursor:pointer;">🔄 再読み込みして認証</button>';
   }
-  licBox.appendChild(licInner);
-  c.appendChild(licBox);
   // renderLicenseInfoが後から呼ばれたとき（バックグラウンド更新）も反映される
   // → window.renderLicenseInfoはlicense-info-boxのIDを直接更新するので自動反映される
   c.appendChild(secLbl('⚙ 基本設定'));
