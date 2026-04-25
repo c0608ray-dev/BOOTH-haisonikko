@@ -1906,7 +1906,9 @@ function updatePWA() {
         'border-radius:6px;color:#c47a20;padding:6px 12px;font-size:11px;cursor:pointer;">' +
         '🔄 別のキーで再認証</button>';
     // ── 再認証ボタンのクリックハンドラ（インラインonclickのクォート衝突回避） ──
-    var resetBtn = document.getElementById('lic-reset-btn');
+    // ── 再認証ボタンのクリックハンドラ ──
+    // box.querySelector を使うことで、boxがまだDOMに追加されていない時でも動作する
+    var resetBtn = box.querySelector('#lic-reset-btn');
     if (resetBtn) {
       resetBtn.addEventListener('click', function() {
         if (confirm('ライセンスをリセットしますか？')) {
