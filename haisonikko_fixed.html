@@ -1305,13 +1305,12 @@ function buildSettingsTab(c) {
   var licInner = document.createElement('div');
   licInner.id = 'license-info-box';
   licInner.style.cssText = 'padding:4px 0;';
-  // 先にDOMに追加してから描画（renderLicenseInfoがgetElementByIdで参照するため）
   licBox.appendChild(licInner);
   c.appendChild(licBox);
-  // 認証済みならその場で描画、未認証なら「未認証」を表示
+  // 認証済みなら直接licInnerに描画（cがまだDOMに追加されていない時点でも動くよう要素を直接渡す）
   if (window._licenseKey && window._deviceId) {
     if (typeof window.renderLicenseInfo === 'function') {
-      window.renderLicenseInfo(window._licenseKey, window._deviceId, window._licenseDeviceCount || null);
+      window.renderLicenseInfo(window._licenseKey, window._deviceId, window._licenseDeviceCount || null, licInner);
     }
   } else {
     licInner.innerHTML =
@@ -1885,8 +1884,9 @@ function updatePWA() {
   }
 
   // ── 設定タブ: ライセンス情報描画 ──
-  function renderLicenseInfo(key, deviceId, count) {
-    var box = document.getElementById('license-info-box');
+  // targetElement を渡せば直接そこに描画。省略時は document.getElementById で探す。
+  function renderLicenseInfo(key, deviceId, count, targetElement) {
+    var box = targetElement || document.getElementById('license-info-box');
     if (!box) return;
     window._licenseDeviceCount = count;
     var countHtml = (count == null)
