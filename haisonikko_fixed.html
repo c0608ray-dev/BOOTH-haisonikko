@@ -1811,11 +1811,19 @@ function updatePWA() {
   'use strict';
 
   var LS_KEY  = 'haisonikko_license';
-  var GAS_URL = 'https://script.google.com/macros/s/AKfycbxve-YBA-QTAAQgBmm4J3fO2lTSri1HAW1L_xTls2SG_NijlRIKZLYHM6wGHnStOV-bBw/exec';
-  // ★ GAS側のスクリプトプロパティに設定した値と同じものを指定
-  // （悪意ある第三者が直接GAS URLを叩くのを防ぐ簡易ガード）
-  // 十分に長くランダムな文字列（例: openssl rand -hex 32 で生成）を推奨
-  var SHARED_SECRET = 'cCy3KsgJ42NXle5SG6V7W98juhZmBz1vox0QnMbtwHdORAPU';
+  var RUNTIME_CONFIG_KEY = 'haisonikko_runtime_config';
+
+  // 配布用HTMLにはシークレットを直書きしない。
+  // 管理用HTML側で localStorage(haisonikko_runtime_config) に設定を注入して運用する。
+  var runtimeConfig = (function() {
+    try {
+      return JSON.parse(localStorage.getItem(RUNTIME_CONFIG_KEY) || 'null') || {};
+    } catch (e) {
+      return {};
+    }
+  })();
+  var GAS_URL = runtimeConfig.gasUrl || '';
+  var SHARED_SECRET = runtimeConfig.sharedSecret || '';
 
   // ── SHA-256（Web Crypto API、Promise返却） ──
   function sha256(str) {
