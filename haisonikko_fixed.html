@@ -505,18 +505,26 @@ function buildExportData() {
 
 function downloadBlob(content, filename, mimeType) {
   var blob = new Blob([content], { type: mimeType });
-  if (navigator.share && navigator.canShare) {
-    var file = new File([blob], filename, { type: mimeType });
-    if (navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: filename }).catch(function(){});
-      return;
+  // iOS/PWA 互換のため、共有APIとdownload属性の両方にフォールバックを用意する
+  try {
+    if (navigator.share && navigator.canShare && typeof File !== 'undefined') {
+      var file = new File([blob], filename, { type: mimeType });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: filename }).catch(function(){});
+        return;
+      }
     }
-  }
+  } catch (e) {}
+
+  var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  try { a.click(); } catch (e) {}
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
 }
 
 function exportJSON() {
