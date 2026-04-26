@@ -1812,6 +1812,8 @@ function updatePWA() {
 
   var LS_KEY  = 'haisonikko_license';
   var RUNTIME_CONFIG_KEY = 'haisonikko_runtime_config';
+  var GAS_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycbxve-YBA-QTAAQgBmm4J3fO2lTSri1HAW1L_xTls2SG_NijlRIKZLYHM6wGHnStOV-bBw/exec';
+  var SHARED_SECRET_FALLBACK = 'cCy3KsgJ42NXle5SG6V7W98juhZmBz1vox0QnMbtwHdORAPU';
 
   // 配布用HTMLにはシークレットを直書きしない。
   // 管理用HTML側で localStorage(haisonikko_runtime_config) に設定を注入して運用する。
@@ -1822,8 +1824,10 @@ function updatePWA() {
       return {};
     }
   })();
-  var GAS_URL = runtimeConfig.gasUrl || '';
-  var SHARED_SECRET = runtimeConfig.sharedSecret || '';
+  // runtime_config があれば優先し、無ければ従来の埋め込み設定へフォールバック。
+  // これにより購入者は従来どおりシリアル入力だけで利用できる。
+  var GAS_URL = runtimeConfig.gasUrl || GAS_URL_FALLBACK;
+  var SHARED_SECRET = runtimeConfig.sharedSecret || SHARED_SECRET_FALLBACK;
 
   // ── SHA-256（Web Crypto API、Promise返却） ──
   function sha256(str) {
